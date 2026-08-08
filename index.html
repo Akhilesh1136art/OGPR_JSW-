@@ -960,6 +960,100 @@ body {
 
 }
 
+
+/* =====================================================
+   FREEZE COLUMN A
+   Column A (JSW OGPR's No) remains visible while the
+   user scrolls horizontally through the other columns.
+   ===================================================== */
+
+#sheet th:first-child,
+#sheet td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 20;
+  background: #f7f9fc;
+}
+
+#sheet tr:first-child th:first-child {
+  z-index: 40;
+  background: #08679a;
+}
+
+/* Freeze Column A after the row-number column. */
+#sheet th:nth-child(2),
+#sheet td:nth-child(2) {
+  position: sticky;
+  left: 52px;
+  z-index: 19;
+  background: white;
+  box-shadow: 2px 0 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Header of frozen Column A stays above normal cells. */
+#sheet tr:first-child th:nth-child(2) {
+  z-index: 39;
+  background: #08679a;
+}
+
+/* Keep editable/frozen Column A readable while editing. */
+#sheet td:nth-child(2)[contenteditable="true"] {
+  background: #ffffcc;
+}
+
+
+/* =====================================================
+   COLUMN A 9-CHARACTER VALIDATION POPUP
+   ===================================================== */
+
+#columnAValidationOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  padding: 20px;
+}
+
+#columnAValidationPopup {
+  width: min(420px, 92vw);
+  background: white;
+  border-radius: 18px;
+  padding: 28px 24px;
+  text-align: center;
+  box-shadow: 0 15px 45px rgba(0,0,0,0.3);
+}
+
+.validationIcon {
+  font-size: 42px;
+  margin-bottom: 8px;
+}
+
+#columnAValidationPopup h2 {
+  margin: 8px 0 12px;
+  color: #172033;
+}
+
+#columnAValidationMessage {
+  color: #667085;
+  line-height: 1.5;
+  margin-bottom: 22px;
+}
+
+#columnAValidationOkBtn {
+  width: 100%;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #08679a;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 16px;
+}
+
 </style>
 
 </head>
@@ -1158,6 +1252,35 @@ body {
     </p>
 
     <button id="duplicateOkBtn">
+      OK
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     COLUMN A VALIDATION POPUP
+     ===================================================== -->
+
+<div id="columnAValidationOverlay">
+
+  <div id="columnAValidationPopup">
+
+    <div class="validationIcon">
+      ⚠️
+    </div>
+
+    <h2>
+      Invalid JSW OGPR's No
+    </h2>
+
+    <p id="columnAValidationMessage">
+      Please enter exactly 9 letters or numbers.
+    </p>
+
+    <button id="columnAValidationOkBtn">
       OK
     </button>
 
@@ -1446,6 +1569,8 @@ function renderTable() {
           "protected-cell"
         );
 
+        td.dataset.previousValue = "";
+
       }
 
 
@@ -1518,6 +1643,14 @@ function handleCellClick(e) {
   if (col === 0) {
 
     if (columnAUnlocked) {
+
+      /*
+         Remember the value before editing so an invalid
+         9-character entry can be rejected safely.
+      */
+
+      td.dataset.previousValue =
+        td.innerText.trim();
 
       return;
 
@@ -2594,6 +2727,56 @@ async function recalculateColumnADuplicates() {
 
 
 // =====================================================
+// COLUMN A VALIDATION
+// =====================================================
+
+function showColumnAValidation(message) {
+
+  const overlay =
+    document.getElementById(
+      "columnAValidationOverlay"
+    );
+
+  const messageBox =
+    document.getElementById(
+      "columnAValidationMessage"
+    );
+
+  messageBox.innerText =
+    message;
+
+  overlay.style.display =
+    "flex";
+
+}
+
+
+document
+  .getElementById(
+    "columnAValidationOkBtn"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      document
+        .getElementById(
+          "columnAValidationOverlay"
+        )
+        .style.display =
+        "none";
+
+      if (selectedCell) {
+
+        selectedCell.focus();
+
+      }
+
+    }
+  );
+
+
+// =====================================================
 // SAVE CELL
 // =====================================================
 
@@ -2657,6 +2840,36 @@ async function saveCell(e) {
 
   const val =
     td.innerText.trim();
+
+
+  /*
+     COLUMN A RULE:
+     - Empty is allowed so a user can clear a cell.
+     - Otherwise it must contain exactly 9
+       letters or numbers.
+     - No spaces or special characters are allowed.
+     - Invalid values are NOT saved to Firebase.
+  */
+
+  if (
+    col === 0 &&
+    val !== "" &&
+    !/^[A-Za-z0-9]{9}$/.test(val)
+  ) {
+
+    const previousValue =
+      td.dataset.previousValue || "";
+
+    td.innerText =
+      previousValue;
+
+    showColumnAValidation(
+      "Column A must contain exactly 9 letters or numbers."
+    );
+
+    return;
+
+  }
 
 
   // ===================================================
