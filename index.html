@@ -1,0 +1,3662 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0, user-scalable=yes, viewport-fit=cover">
+
+<title>JSW OGPR</title>
+
+<style>
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f7f9fc;
+  color: #222;
+}
+
+
+/* =====================================================
+   TOP BAR
+   ===================================================== */
+
+.topbar {
+  background: #08639a;
+  color: white;
+  height: 65px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 20px;
+
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+
+/* =====================================================
+   TOOLBAR
+   ===================================================== */
+
+.toolbar {
+  background: white;
+
+  padding: 10px 15px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  border-bottom: 1px solid #ddd;
+}
+
+#searchInput {
+
+  width: 280px;
+
+  padding: 9px 12px;
+
+  border: 1px solid #ccc;
+
+  border-radius: 5px;
+
+  outline: none;
+
+  font-size: 14px;
+}
+
+#searchInput:focus {
+
+  border-color: #007bff;
+}
+
+.toolbar button {
+
+  padding: 9px 16px;
+
+  border: none;
+
+  border-radius: 5px;
+
+  cursor: pointer;
+
+  color: white;
+
+  font-weight: bold;
+}
+
+#historyBtn {
+
+  background: #6c757d;
+}
+
+#exportBtn {
+
+  background: #28a745;
+}
+
+#exportBtn:hover {
+
+  background: #218838;
+}
+
+
+/* =====================================================
+   SHEET
+   ===================================================== */
+
+#sheetContainer {
+
+  width: 100%;
+
+  height: calc(100vh - 120px);
+
+  overflow: auto;
+
+  background: white;
+}
+
+table {
+
+  border-collapse: collapse;
+
+  width: max-content;
+
+  min-width: 100%;
+
+  background: white;
+}
+
+th,
+td {
+
+  border: 1px solid #cbd5e1;
+
+  min-width: 160px;
+
+  height: 50px;
+
+  padding: 8px;
+
+  text-align: left;
+
+  vertical-align: middle;
+
+  white-space: nowrap;
+}
+
+
+/* =====================================================
+   COLUMN HEADERS
+   ===================================================== */
+
+#sheet > tr:first-child th {
+
+  background: #08639a;
+
+  color: white;
+
+  height: 55px;
+
+  position: sticky;
+
+  top: 0;
+
+  z-index: 10;
+
+  font-weight: bold;
+}
+
+#sheet > tr:first-child th:first-child {
+
+  min-width: 52px;
+
+  width: 52px;
+
+  text-align: center;
+
+  background: #075681;
+}
+
+.column-letter {
+
+  font-size: 12px;
+
+  font-weight: bold;
+
+  margin-bottom: 5px;
+
+  color: #dbeeff;
+}
+
+.column-name {
+
+  font-size: 15px;
+
+  font-weight: bold;
+
+  color: white;
+}
+
+
+/* =====================================================
+   ROW NUMBERS
+   ===================================================== */
+
+.row-number {
+
+  position: sticky;
+
+  left: 0;
+
+  z-index: 5;
+
+  min-width: 52px;
+
+  width: 52px;
+
+  text-align: center;
+
+  background: #f1f5f9;
+
+  color: #334155;
+}
+
+
+/* =====================================================
+   CELLS
+   ===================================================== */
+
+td {
+
+  background: white;
+
+  cursor: pointer;
+
+  color: #172033;
+
+  font-size: 15px;
+}
+
+
+/* =====================================================
+   EDITING ALWAYS WHITE
+   ===================================================== */
+
+td[contenteditable="true"] {
+
+  background: white;
+
+  cursor: text;
+
+  outline: none;
+}
+
+td[contenteditable="true"]:focus {
+
+  background: white;
+
+  outline: 2px solid #007bff;
+
+  outline-offset: -2px;
+}
+
+
+/* =====================================================
+   DATE CELL
+   ===================================================== */
+
+.date-cell {
+
+  cursor: pointer !important;
+
+  background: white !important;
+}
+
+
+/* =====================================================
+   COLUMN A PROTECTION
+   ===================================================== */
+
+.protected-cell {
+
+  cursor: pointer;
+
+  position: relative;
+}
+
+.protected-cell::after {
+
+  content: "🔒";
+
+  position: absolute;
+
+  right: 5px;
+
+  top: 5px;
+
+  font-size: 12px;
+
+  opacity: 0.55;
+}
+
+.protected-unlocked::after {
+
+  content: "";
+}
+
+
+/* =====================================================
+   DUPLICATE CELL
+   ===================================================== */
+
+.duplicate-cell {
+
+  background: #ff3b30 !important;
+
+  color: white !important;
+
+  font-weight: bold !important;
+}
+
+
+/* =====================================================
+   SEARCH
+   ===================================================== */
+
+td.highlight {
+
+  background: #fff176 !important;
+}
+
+
+/* =====================================================
+   NAME POPUP
+   ===================================================== */
+
+#namePopupOverlay {
+
+  display: none;
+
+  position: fixed;
+
+  inset: 0;
+
+  background: rgba(0,0,0,0.5);
+
+  z-index: 5000;
+
+  align-items: center;
+
+  justify-content: center;
+}
+
+#namePopup {
+
+  width: 380px;
+
+  max-width: 90%;
+
+  background: white;
+
+  border-radius: 12px;
+
+  padding: 25px;
+
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+
+  text-align: center;
+}
+
+#namePopup h2 {
+
+  margin-top: 0;
+
+  color: #333;
+}
+
+#namePopup p {
+
+  color: #666;
+
+  margin-bottom: 15px;
+}
+
+#nameInput {
+
+  width: 100%;
+
+  padding: 11px;
+
+  border: 1px solid #ccc;
+
+  border-radius: 6px;
+
+  outline: none;
+
+  font-size: 15px;
+}
+
+#nameError {
+
+  color: #dc3545;
+
+  font-size: 14px;
+
+  min-height: 20px;
+
+  margin-top: 8px;
+
+  margin-bottom: 8px;
+}
+
+#continueEditBtn,
+#cancelEditBtn {
+
+  padding: 10px 20px;
+
+  border: none;
+
+  border-radius: 6px;
+
+  cursor: pointer;
+
+  font-weight: bold;
+
+  margin: 5px;
+}
+
+#continueEditBtn {
+
+  background: #007bff;
+
+  color: white;
+}
+
+#continueEditBtn:hover {
+
+  background: #0056b3;
+}
+
+#cancelEditBtn {
+
+  background: #6c757d;
+
+  color: white;
+}
+
+
+/* =====================================================
+   PASSWORD POPUP
+   ===================================================== */
+
+#passwordPopupOverlay {
+
+  display: none;
+
+  position: fixed;
+
+  inset: 0;
+
+  background: rgba(0,0,0,0.45);
+
+  z-index: 6000;
+
+  align-items: center;
+
+  justify-content: center;
+}
+
+#passwordPopup {
+
+  width: 320px;
+
+  max-width: 90%;
+
+  background: white;
+
+  border-radius: 22px;
+
+  padding: 28px;
+
+  box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+
+  text-align: center;
+}
+
+.lockIcon {
+
+  width: 66px;
+
+  height: 66px;
+
+  margin: 0 auto 18px;
+
+  border-radius: 50%;
+
+  background: #e0f2ff;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-size: 30px;
+}
+
+#passwordPopup h2 {
+
+  margin: 0 0 10px;
+
+  font-size: 23px;
+
+  color: #172033;
+}
+
+#passwordPopup p {
+
+  margin: 0 0 18px;
+
+  color: #718096;
+
+  line-height: 1.4;
+
+  font-size: 14px;
+}
+
+#passwordInput {
+
+  width: 100%;
+
+  padding: 14px 16px;
+
+  border: 2px solid #222;
+
+  border-radius: 16px;
+
+  font-size: 16px;
+
+  outline: none;
+
+  margin-bottom: 8px;
+}
+
+#passwordInput:focus {
+
+  border-color: #08639a;
+}
+
+#passwordError {
+
+  min-height: 20px;
+
+  color: #dc3545;
+
+  font-size: 14px;
+
+  margin-bottom: 8px;
+}
+
+.passwordButtons {
+
+  display: flex;
+
+  gap: 15px;
+
+  margin-top: 10px;
+}
+
+#cancelPasswordBtn,
+#unlockPasswordBtn {
+
+  flex: 1;
+
+  padding: 14px;
+
+  border: none;
+
+  border-radius: 14px;
+
+  font-size: 16px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+}
+
+#cancelPasswordBtn {
+
+  background: #f1f5f9;
+
+  color: #172033;
+}
+
+#unlockPasswordBtn {
+
+  background: #08639a;
+
+  color: white;
+}
+
+#unlockPasswordBtn:hover {
+
+  background: #075681;
+}
+
+
+/* =====================================================
+   DATE POPUP
+   ===================================================== */
+
+#datePopupOverlay {
+
+  display: none;
+
+  position: fixed;
+
+  inset: 0;
+
+  background: rgba(0,0,0,0.45);
+
+  z-index: 8000;
+
+  align-items: center;
+
+  justify-content: center;
+}
+
+#datePopup {
+
+  width: 330px;
+
+  max-width: 90%;
+
+  background: white;
+
+  border-radius: 18px;
+
+  padding: 25px;
+
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+
+  text-align: center;
+}
+
+#datePopup h2 {
+
+  margin-top: 0;
+
+  color: #08639a;
+}
+
+#datePopup p {
+
+  color: #666;
+}
+
+#dateInput {
+
+  width: 100%;
+
+  padding: 12px;
+
+  border: 2px solid #08639a;
+
+  border-radius: 10px;
+
+  font-size: 17px;
+
+  cursor: pointer;
+}
+
+.dateButtons {
+
+  display: flex;
+
+  gap: 10px;
+
+  margin-top: 18px;
+}
+
+#dateCancelBtn,
+#dateSelectBtn {
+
+  flex: 1;
+
+  padding: 11px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  font-weight: bold;
+}
+
+#dateCancelBtn {
+
+  background: #6c757d;
+
+  color: white;
+}
+
+#dateSelectBtn {
+
+  background: #08639a;
+
+  color: white;
+}
+
+
+/* =====================================================
+   DUPLICATE POPUP
+   ===================================================== */
+
+#duplicatePopupOverlay {
+
+  display: none;
+
+  position: fixed;
+
+  inset: 0;
+
+  background: rgba(0,0,0,0.5);
+
+  z-index: 9000;
+
+  align-items: center;
+
+  justify-content: center;
+}
+
+#duplicatePopup {
+
+  width: 390px;
+
+  max-width: 90%;
+
+  background: white;
+
+  border-radius: 18px;
+
+  padding: 30px;
+
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+
+  text-align: center;
+}
+
+.duplicateIcon {
+
+  width: 65px;
+
+  height: 65px;
+
+  margin: 0 auto 15px;
+
+  border-radius: 50%;
+
+  background: #ffe5e5;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-size: 30px;
+}
+
+#duplicatePopup h2 {
+
+  margin: 0 0 12px;
+
+  color: #dc3545;
+
+  font-size: 22px;
+}
+
+#duplicatePopup p {
+
+  color: #555;
+
+  line-height: 1.5;
+
+  margin-bottom: 20px;
+}
+
+#duplicateCellName {
+
+  font-weight: bold;
+
+  color: #dc3545;
+
+  font-size: 17px;
+}
+
+#duplicateOkBtn {
+
+  width: 100%;
+
+  padding: 12px;
+
+  border: none;
+
+  border-radius: 10px;
+
+  background: #dc3545;
+
+  color: white;
+
+  font-weight: bold;
+
+  cursor: pointer;
+
+  font-size: 15px;
+}
+
+
+/* =====================================================
+   HISTORY POPUP
+   ===================================================== */
+
+#historyPopup {
+
+  display: none;
+
+  position: fixed;
+
+  top: 50%;
+
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  background: white;
+
+  border-radius: 10px;
+
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+
+  width: 500px;
+
+  max-width: 90%;
+
+  max-height: 500px;
+
+  overflow-y: auto;
+
+  padding: 20px;
+
+  z-index: 4000;
+
+  text-align: left;
+}
+
+#historyPopup h3 {
+
+  margin-top: 0;
+
+  text-align: center;
+}
+
+#closeHistory {
+
+  background: red;
+
+  color: white;
+
+  border: none;
+
+  border-radius: 5px;
+
+  padding: 5px 10px;
+
+  cursor: pointer;
+
+  float: right;
+}
+
+.history-item {
+
+  border-bottom: 1px solid #ddd;
+
+  padding: 8px 0;
+
+  font-size: 14px;
+}
+
+
+
+
+
+
+/* =====================================================
+   MOBILE TABLE WIDTH FIX
+   Removes the unwanted blank strip on the right while
+   keeping all spreadsheet columns horizontally scrollable.
+   ===================================================== */
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+#sheetContainer {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+
+#sheet {
+  margin: 0;
+  max-width: none;
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+}
+
+@media (max-width: 700px) {
+
+  #sheetContainer {
+    width: 100vw;
+    max-width: 100vw;
+  }
+
+  #sheet {
+    width: max-content;
+    min-width: 100%;
+  }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     TOP BAR
+     ===================================================== -->
+
+<div class="topbar">
+
+  <h1>JSW OGPR</h1>
+
+</div>
+
+
+<!-- =====================================================
+     TOOLBAR
+     ===================================================== -->
+
+<div class="toolbar">
+
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="Search cell or value..."
+  >
+
+  <button id="historyBtn">
+    View History
+  </button>
+
+  <button id="exportBtn">
+    ⬇ Download PDF
+  </button>
+
+
+
+</div>
+
+
+<!-- =====================================================
+     SHEET
+     ===================================================== -->
+
+<div id="sheetContainer">
+
+  <table id="sheet"></table>
+
+</div>
+
+
+<!-- =====================================================
+     NAME POPUP
+     ===================================================== -->
+
+<div id="namePopupOverlay">
+
+  <div id="namePopup">
+
+    <h2>✏️ Edit Sheet</h2>
+
+    <p>
+      Enter your name to make changes.
+    </p>
+
+    <input
+      type="text"
+      id="nameInput"
+      placeholder="Enter your name"
+      autocomplete="off"
+    >
+
+    <div id="nameError"></div>
+
+    <button id="continueEditBtn">
+      Continue
+    </button>
+
+    <button id="cancelEditBtn">
+      Cancel
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     PASSWORD POPUP
+     ===================================================== -->
+
+<div id="passwordPopupOverlay">
+
+  <div id="passwordPopup">
+
+    <div class="lockIcon">
+      🛡️
+    </div>
+
+    <h2>
+      Column A is Protected
+    </h2>
+
+    <p>
+      Enter password to edit JSW OGPR's No
+    </p>
+
+    <input
+      type="password"
+      id="passwordInput"
+      placeholder="Password"
+      autocomplete="off"
+    >
+
+    <div id="passwordError"></div>
+
+    <div class="passwordButtons">
+
+      <button id="cancelPasswordBtn">
+        Cancel
+      </button>
+
+      <button id="unlockPasswordBtn">
+        Unlock
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     DATE POPUP
+     ===================================================== -->
+
+<div id="datePopupOverlay">
+
+  <div id="datePopup">
+
+    <h2>📅 Select Date</h2>
+
+    <p>
+      Select the date you want to enter.
+    </p>
+
+    <input
+      type="date"
+      id="dateInput"
+    >
+
+    <div class="dateButtons">
+
+      <button id="dateCancelBtn">
+        Cancel
+      </button>
+
+      <button id="dateSelectBtn">
+        Select Date
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     DUPLICATE POPUP
+     ===================================================== -->
+
+<div id="duplicatePopupOverlay">
+
+  <div id="duplicatePopup">
+
+    <div class="duplicateIcon">
+      ⚠️
+    </div>
+
+    <h2>
+      It already exists!
+    </h2>
+
+    <p>
+
+      This value already exists in
+
+      <span id="duplicateCellName"></span>.
+
+    </p>
+
+    <button id="duplicateOkBtn">
+      OK
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     HISTORY POPUP
+     ===================================================== -->
+
+<div id="historyPopup">
+
+  <button id="closeHistory">
+    X
+  </button>
+
+  <h3>
+    Edit History
+  </h3>
+
+  <div id="historyContent"></div>
+
+</div>
+
+
+<!-- =====================================================
+     PDF LIBRARIES
+     ===================================================== -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+// =====================================================
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+
+<!-- =====================================================
+     FIREBASE
+     ===================================================== -->
+
+<script type="module">
+
+import {
+  initializeApp
+}
+from
+"https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+
+
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue,
+  push,
+  remove
+}
+from
+"https://www.gstatic.com/firebasejs/10.5.0/firebase-database.js";
+
+
+// =====================================================
+// FIREBASE CONFIG
+// =====================================================
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBZIfDdBspnWhyqmBuIHHj1aaj9sEYMeAU",
+  authDomain: "jsw-ogpr-register.firebaseapp.com",
+  databaseURL: "https://jsw-ogpr-register-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "jsw-ogpr-register",
+  storageBucket: "jsw-ogpr-register.firebasestorage.app",
+  messagingSenderId: "383638047963",
+  appId: "1:383638047963:web:6e5d62cc7dfc2e94af90fe",
+  measurementId: "G-9RQCRTLSGE"
+};
+
+const app =
+  initializeApp(firebaseConfig);
+
+
+const db =
+  getDatabase(app);
+
+
+// =====================================================
+// SETTINGS
+// =====================================================
+
+const rows = 100;
+
+const cols = 26;
+
+const activeSheet = "section1";
+
+const table =
+  document.getElementById("sheet");
+
+
+// =====================================================
+// EDIT SESSION
+// =====================================================
+
+let userName = "";
+
+let editingEnabled = false;
+
+let columnAUnlocked = false;
+
+let selectedCell = null;
+
+
+// =====================================================
+// COLUMN A PASSWORD
+// =====================================================
+
+const COLUMN_A_PASSWORD = "JSW";
+
+
+// =====================================================
+// COLUMN HEADERS
+// =====================================================
+
+const columnHeaders = [
+
+  "JSW OGPR's No",
+
+  "Verified by Neo",
+
+  "Timken Permit",
+
+  "Date",
+
+  "Remark",
+
+  "", "", "", "", "",
+
+  "", "", "", "", "",
+
+  "", "", "", "", "",
+
+  "", "", "", "", "",
+
+  "", "", "", "", "",
+
+  ""
+
+];
+
+
+// =====================================================
+// COLUMN LETTER
+// =====================================================
+
+function colLetter(n) {
+
+  let s = "";
+
+  while (n >= 0) {
+
+    s =
+      String.fromCharCode(
+        n % 26 + 65
+      ) + s;
+
+    n =
+      Math.floor(n / 26) - 1;
+
+  }
+
+  return s;
+
+}
+
+
+// =====================================================
+// RENDER TABLE
+// =====================================================
+
+function renderTable() {
+
+  table.innerHTML = "";
+
+
+  const headerRow =
+    document.createElement("tr");
+
+
+  const corner =
+    document.createElement("th");
+
+  corner.innerText = "#";
+
+  headerRow.appendChild(corner);
+
+
+  for (
+    let c = 0;
+    c < cols;
+    c++
+  ) {
+
+    const th =
+      document.createElement("th");
+
+
+    const letter =
+      document.createElement("div");
+
+    letter.className =
+      "column-letter";
+
+    letter.innerText =
+      colLetter(c);
+
+
+    const name =
+      document.createElement("div");
+
+    name.className =
+      "column-name";
+
+    name.innerText =
+      columnHeaders[c] || "";
+
+
+    th.appendChild(letter);
+
+    th.appendChild(name);
+
+    headerRow.appendChild(th);
+
+  }
+
+
+  table.appendChild(headerRow);
+
+
+  for (
+    let r = 0;
+    r < rows;
+    r++
+  ) {
+
+    const tr =
+      document.createElement("tr");
+
+
+    const rowHeader =
+      document.createElement("th");
+
+    rowHeader.className =
+      "row-number";
+
+    rowHeader.innerText =
+      r + 1;
+
+    tr.appendChild(rowHeader);
+
+
+    for (
+      let c = 0;
+      c < cols;
+      c++
+    ) {
+
+      const td =
+        document.createElement("td");
+
+
+      td.dataset.row = r;
+
+      td.dataset.col = c;
+
+      td.dataset.address =
+        `${colLetter(c)}${r + 1}`;
+
+
+      td.contentEditable = false;
+
+
+      if (c === 0) {
+
+        td.classList.add(
+          "protected-cell"
+        );
+
+      }
+
+
+      /*
+         Column D = Date
+      */
+
+      if (c === 3) {
+
+        td.classList.add(
+          "date-cell"
+        );
+
+        /*
+           Make the date cell focusable so keyboard
+           Backspace/Delete behavior is reliable.
+        */
+
+        td.tabIndex = 0;
+
+      }
+
+
+      td.addEventListener(
+        "click",
+        handleCellClick
+      );
+
+
+      td.addEventListener(
+        "blur",
+        saveCell
+      );
+
+
+      tr.appendChild(td);
+
+    }
+
+
+    table.appendChild(tr);
+
+  }
+
+}
+
+
+// =====================================================
+// CELL CLICK
+// =====================================================
+
+function handleCellClick(e) {
+
+  const td =
+    e.currentTarget;
+
+
+  const col =
+    Number(td.dataset.col);
+
+
+  selectedCell =
+    td;
+
+
+  // ===================================================
+  // COLUMN A
+  // ===================================================
+
+  if (col === 0) {
+
+    if (columnAUnlocked) {
+
+      return;
+
+    }
+
+
+    if (userName) {
+
+      openPasswordPopup();
+
+    }
+
+    else {
+
+      openNamePopup(true);
+
+    }
+
+    return;
+
+  }
+
+
+  // ===================================================
+  // COLUMN D - DATE
+  // ===================================================
+
+  if (col === 3) {
+
+    if (!editingEnabled) {
+
+      openNamePopup(false);
+
+      return;
+
+    }
+
+
+    openDatePopup();
+
+    return;
+
+  }
+
+
+  // ===================================================
+  // OTHER COLUMNS
+  // ===================================================
+
+  if (editingEnabled) {
+
+    return;
+
+  }
+
+
+  openNamePopup(false);
+
+}
+
+
+// =====================================================
+// NAME POPUP
+// =====================================================
+
+function openNamePopup(
+  isColumnA = false
+) {
+
+  const overlay =
+    document.getElementById(
+      "namePopupOverlay"
+    );
+
+
+  const input =
+    document.getElementById(
+      "nameInput"
+    );
+
+
+  const error =
+    document.getElementById(
+      "nameError"
+    );
+
+
+  input.value = "";
+
+  error.innerText = "";
+
+
+  overlay.dataset.columnA =
+    isColumnA
+      ? "true"
+      : "false";
+
+
+  overlay.style.display =
+    "flex";
+
+
+  setTimeout(
+    () => input.focus(),
+    100
+  );
+
+}
+
+
+// =====================================================
+// NAME CONTINUE
+// =====================================================
+
+document
+  .getElementById(
+    "continueEditBtn"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      const input =
+        document.getElementById(
+          "nameInput"
+        );
+
+
+      const error =
+        document.getElementById(
+          "nameError"
+        );
+
+
+      const name =
+        input.value.trim();
+
+
+      if (name === "") {
+
+        error.innerText =
+          "⚠️ Please enter your name to do changes.";
+
+        input.focus();
+
+        return;
+
+      }
+
+
+      userName =
+        name;
+
+
+      editingEnabled =
+        true;
+
+
+      /*
+         Unlock normal cells.
+
+         Column A remains protected.
+         Column D uses calendar.
+      */
+
+      document
+        .querySelectorAll(
+          "#sheet td"
+        )
+        .forEach(td => {
+
+          const col =
+            Number(
+              td.dataset.col
+            );
+
+
+          if (
+            col !== 0 &&
+            col !== 3
+          ) {
+
+            td.contentEditable =
+              true;
+
+          }
+
+        });
+
+
+      const overlay =
+        document.getElementById(
+          "namePopupOverlay"
+        );
+
+
+      const isColumnA =
+        overlay.dataset.columnA ===
+        "true";
+
+
+      overlay.style.display =
+        "none";
+
+
+      /*
+         Column A -> password.
+      */
+
+      if (isColumnA) {
+
+        openPasswordPopup();
+
+        return;
+
+      }
+
+
+      /*
+         Date -> calendar.
+      */
+
+      if (
+        selectedCell &&
+        Number(
+          selectedCell.dataset.col
+        ) === 3
+      ) {
+
+        openDatePopup();
+
+        return;
+
+      }
+
+
+      if (selectedCell) {
+
+        selectedCell.focus();
+
+      }
+
+    }
+  );
+
+
+// =====================================================
+// NAME CANCEL
+// =====================================================
+
+document
+  .getElementById(
+    "cancelEditBtn"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      document
+        .getElementById(
+          "namePopupOverlay"
+        )
+        .style.display =
+        "none";
+
+
+      selectedCell =
+        null;
+
+    }
+  );
+
+
+// =====================================================
+// NAME ENTER / ESC
+// =====================================================
+
+document
+  .getElementById(
+    "nameInput"
+  )
+  .addEventListener(
+    "keydown",
+    e => {
+
+      if (e.key === "Enter") {
+
+        document
+          .getElementById(
+            "continueEditBtn"
+          )
+          .click();
+
+      }
+
+
+      if (e.key === "Escape") {
+
+        document
+          .getElementById(
+            "cancelEditBtn"
+          )
+          .click();
+
+      }
+
+    }
+  );
+
+
+// =====================================================
+// PASSWORD POPUP
+// =====================================================
+
+function openPasswordPopup() {
+
+  const overlay =
+    document.getElementById(
+      "passwordPopupOverlay"
+    );
+
+
+  const input =
+    document.getElementById(
+      "passwordInput"
+    );
+
+
+  const error =
+    document.getElementById(
+      "passwordError"
+    );
+
+
+  input.value = "";
+
+  error.innerText = "";
+
+
+  overlay.style.display =
+    "flex";
+
+
+  setTimeout(
+    () => input.focus(),
+    100
+  );
+
+}
+
+
+// =====================================================
+// UNLOCK COLUMN A
+// =====================================================
+
+function unlockColumnA() {
+
+  const input =
+    document.getElementById(
+      "passwordInput"
+    );
+
+
+  const error =
+    document.getElementById(
+      "passwordError"
+    );
+
+
+  const password =
+    input.value;
+
+
+  if (password === "") {
+
+    error.innerText =
+      "⚠️ Please enter password.";
+
+    input.focus();
+
+    return;
+
+  }
+
+
+  if (
+    password !==
+    COLUMN_A_PASSWORD
+  ) {
+
+    error.innerText =
+      "❌ Incorrect password.";
+
+    input.focus();
+
+    input.select();
+
+    return;
+
+  }
+
+
+  columnAUnlocked =
+    true;
+
+
+  document
+    .querySelectorAll(
+      '#sheet td[data-col="0"]'
+    )
+    .forEach(td => {
+
+      td.contentEditable =
+        true;
+
+      td.classList.add(
+        "protected-unlocked"
+      );
+
+    });
+
+
+  document
+    .getElementById(
+      "passwordPopupOverlay"
+    )
+    .style.display =
+    "none";
+
+
+  if (selectedCell) {
+
+    selectedCell.focus();
+
+  }
+
+}
+
+
+// =====================================================
+// PASSWORD BUTTONS
+// =====================================================
+
+document
+  .getElementById(
+    "unlockPasswordBtn"
+  )
+  .addEventListener(
+    "click",
+    unlockColumnA
+  );
+
+
+document
+  .getElementById(
+    "cancelPasswordBtn"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      document
+        .getElementById(
+          "passwordPopupOverlay"
+        )
+        .style.display =
+        "none";
+
+
+      selectedCell =
+        null;
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "passwordInput"
+  )
+  .addEventListener(
+    "keydown",
+    e => {
+
+      if (e.key === "Enter") {
+
+        unlockColumnA();
+
+      }
+
+
+      if (e.key === "Escape") {
+
+        document
+          .getElementById(
+            "cancelPasswordBtn"
+          )
+          .click();
+
+      }
+
+    }
+  );
+
+
+// =====================================================
+// DATE POPUP
+// =====================================================
+
+function openDatePopup() {
+
+  if (!selectedCell) {
+
+    return;
+
+  }
+
+
+  const overlay =
+    document.getElementById(
+      "datePopupOverlay"
+    );
+
+
+  const input =
+    document.getElementById(
+      "dateInput"
+    );
+
+
+  const currentValue =
+    selectedCell.innerText.trim();
+
+
+  /*
+     If there is already a date,
+     show that date.
+  */
+
+  if (
+    /^\d{4}-\d{2}-\d{2}$/
+      .test(currentValue)
+  ) {
+
+    input.value =
+      currentValue;
+
+  }
+
+  else {
+
+    input.value =
+      "";
+
+  }
+
+
+  overlay.style.display =
+    "flex";
+
+
+  setTimeout(
+    () => input.focus(),
+    100
+  );
+
+}
+
+
+// =====================================================
+// DATE SELECT
+// =====================================================
+
+document
+  .getElementById(
+    "dateSelectBtn"
+  )
+  .addEventListener(
+    "click",
+    async () => {
+
+      const input =
+        document.getElementById(
+          "dateInput"
+        );
+
+
+      const selectedDate =
+        input.value;
+
+
+      /*
+         Always close the date popup when
+         the user clicks Select Date.
+      */
+
+      document
+        .getElementById(
+          "datePopupOverlay"
+        )
+        .style.display =
+        "none";
+
+
+      if (!selectedCell) {
+
+        return;
+
+      }
+
+
+      /*
+         If the user did not select a date,
+         do nothing to the cell.
+
+         No warning.
+         No alert.
+         No text is added.
+      */
+
+      if (!selectedDate) {
+
+        return;
+
+      }
+
+
+      /*
+         If a date was selected,
+         put it into the cell and save it.
+      */
+
+      selectedCell.innerText =
+        selectedDate;
+
+
+      await saveDateCell(
+        selectedCell
+      );
+
+    }
+  );
+
+
+// =====================================================
+// DATE CANCEL
+// =====================================================
+
+document
+  .getElementById(
+    "dateCancelBtn"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      document
+        .getElementById(
+          "datePopupOverlay"
+        )
+        .style.display =
+        "none";
+
+    }
+  );
+
+
+// =====================================================
+// SAVE DATE CELL
+// =====================================================
+
+async function saveDateCell(td) {
+
+  if (
+    !editingEnabled ||
+    !userName
+  ) {
+
+    return;
+
+  }
+
+
+  const r =
+    td.dataset.row;
+
+  const c =
+    td.dataset.col;
+
+  const val =
+    td.innerText.trim();
+
+
+  const cellRef =
+    ref(
+      db,
+      `sheets/${activeSheet}/${r}_${c}`
+    );
+
+
+  if (val === "") {
+
+    await remove(cellRef);
+
+  }
+
+  else {
+
+    await set(
+      cellRef,
+      {
+
+        value:
+          val,
+
+        duplicate:
+          false
+
+      }
+    );
+
+  }
+
+
+  await push(
+    ref(
+      db,
+      `sheets/${activeSheet}/history`
+    ),
+    {
+
+      user:
+        userName,
+
+      cell:
+        td.dataset.address,
+
+      value:
+        val,
+
+      time:
+        new Date()
+          .toLocaleString()
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// DELETE DATE WITH BACKSPACE / DELETE
+// =====================================================
+// Date cells are intentionally not contenteditable.
+// We therefore use selectedCell instead of document.activeElement.
+// This also works reliably on phones.
+
+document.addEventListener(
+  "keydown",
+  async function(e) {
+
+    /*
+       Only handle Backspace/Delete when a date cell
+       is the currently selected cell.
+    */
+
+    if (!selectedCell) {
+      return;
+    }
+
+    const col =
+      Number(selectedCell.dataset.col);
+
+    if (col !== 3) {
+      return;
+    }
+
+    if (
+      !editingEnabled ||
+      !userName
+    ) {
+      return;
+    }
+
+    if (
+      e.key !== "Backspace" &&
+      e.key !== "Delete"
+    ) {
+      return;
+    }
+
+    /*
+       Do not let the browser navigate back or
+       perform another default action.
+    */
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const td = selectedCell;
+
+    /*
+       If already blank, there is nothing to delete.
+    */
+
+    if (td.innerText.trim() === "") {
+      return;
+    }
+
+    /*
+       Clear the visible date immediately.
+    */
+
+    td.innerText = "";
+
+    const r =
+      td.dataset.row;
+
+    const c =
+      td.dataset.col;
+
+    const cellRef =
+      ref(
+        db,
+        `sheets/${activeSheet}/${r}_${c}`
+      );
+
+    /*
+       Remove the date from Firebase.
+    */
+
+    await remove(cellRef);
+
+    /*
+       Record the deletion in history.
+    */
+
+    await push(
+      ref(
+        db,
+        `sheets/${activeSheet}/history`
+      ),
+      {
+        user:
+          userName,
+
+        cell:
+          td.dataset.address,
+
+        value:
+          "",
+
+        time:
+          new Date()
+            .toLocaleString()
+      }
+    );
+
+  }
+);
+
+
+// =====================================================
+// DUPLICATE POPUP
+// =====================================================
+
+function showDuplicatePopup(
+  cellAddress
+) {
+
+  const overlay =
+    document.getElementById(
+      "duplicatePopupOverlay"
+    );
+
+
+  const cellName =
+    document.getElementById(
+      "duplicateCellName"
+    );
+
+
+  cellName.innerText =
+    cellAddress;
+
+
+  overlay.style.display =
+    "flex";
+
+}
+
+
+document
+  .getElementById(
+    "duplicateOkBtn"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      document
+        .getElementById(
+          "duplicatePopupOverlay"
+        )
+        .style.display =
+        "none";
+
+    }
+  );
+
+
+// =====================================================
+// COLUMN A CELLS
+// =====================================================
+
+function getColumnACells() {
+
+  return Array.from(
+    document.querySelectorAll(
+      '#sheet td[data-col="0"]'
+    )
+  );
+
+}
+
+
+// =====================================================
+// RECALCULATE COLUMN A DUPLICATES
+// =====================================================
+
+async function recalculateColumnADuplicates() {
+
+  const cells =
+    getColumnACells();
+
+
+  const groups = {};
+
+
+  cells.forEach(cell => {
+
+    const value =
+      cell.innerText.trim();
+
+
+    if (!value) {
+
+      return;
+
+    }
+
+
+    const key =
+      value.toLowerCase();
+
+
+    if (!groups[key]) {
+
+      groups[key] = [];
+
+    }
+
+
+    groups[key].push(cell);
+
+  });
+
+
+  const duplicateCells =
+    new Set();
+
+
+  Object.values(groups)
+    .forEach(group => {
+
+      if (group.length > 1) {
+
+        group.forEach(cell => {
+
+          duplicateCells.add(
+            cell
+          );
+
+        });
+
+      }
+
+    });
+
+
+  const promises = [];
+
+
+  for (const cell of cells) {
+
+    const value =
+      cell.innerText.trim();
+
+
+    const duplicate =
+      duplicateCells.has(cell);
+
+
+    /*
+       Update screen.
+    */
+
+    if (duplicate) {
+
+      cell.classList.add(
+        "duplicate-cell"
+      );
+
+    }
+
+    else {
+
+      cell.classList.remove(
+        "duplicate-cell"
+      );
+
+    }
+
+
+    const r =
+      cell.dataset.row;
+
+    const c =
+      cell.dataset.col;
+
+
+    const cellRef =
+      ref(
+        db,
+        `sheets/${activeSheet}/${r}_${c}`
+      );
+
+
+    if (!value) {
+
+      promises.push(
+        remove(cellRef)
+      );
+
+    }
+
+    else {
+
+      promises.push(
+        set(
+          cellRef,
+          {
+
+            value:
+              value,
+
+            duplicate:
+              duplicate
+
+          }
+        )
+      );
+
+    }
+
+  }
+
+
+  await Promise.all(
+    promises
+  );
+
+}
+
+
+// =====================================================
+// SAVE CELL
+// =====================================================
+
+async function saveCell(e) {
+
+  const td =
+    e.target;
+
+
+  const col =
+    Number(td.dataset.col);
+
+
+  /*
+     Date is handled separately.
+  */
+
+  if (col === 3) {
+
+    return;
+
+  }
+
+
+  /*
+     Column A requires password.
+  */
+
+  if (
+    col === 0 &&
+    !columnAUnlocked
+  ) {
+
+    return;
+
+  }
+
+
+  /*
+     Other columns require name.
+  */
+
+  if (
+    col !== 0 &&
+    (
+      !editingEnabled ||
+      !userName
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  const r =
+    td.dataset.row;
+
+  const c =
+    td.dataset.col;
+
+  const val =
+    td.innerText.trim();
+
+
+  // ===================================================
+  // COLUMN A
+  // ===================================================
+
+  if (col === 0) {
+
+    const cellRef =
+      ref(
+        db,
+        `sheets/${activeSheet}/${r}_${c}`
+      );
+
+
+    /*
+       SAVE NEW VALUE FIRST.
+    */
+
+    if (val === "") {
+
+      await remove(
+        cellRef
+      );
+
+    }
+
+    else {
+
+      await set(
+        cellRef,
+        {
+
+          value:
+            val,
+
+          duplicate:
+            false
+
+        }
+      );
+
+    }
+
+
+    /*
+       Recalculate duplicates.
+    */
+
+    await recalculateColumnADuplicates();
+
+
+    /*
+       Find duplicate for popup.
+    */
+
+    if (val !== "") {
+
+      const matchingCells =
+        getColumnACells()
+          .filter(cell => {
+
+            return (
+              cell.innerText
+                .trim()
+                .toLowerCase() ===
+              val.toLowerCase()
+            );
+
+          });
+
+
+      if (
+        matchingCells.length > 1
+      ) {
+
+        const other =
+          matchingCells.find(
+            cell =>
+              cell !== td
+          );
+
+
+        if (other) {
+
+          showDuplicatePopup(
+            other.dataset.address
+          );
+
+        }
+
+      }
+
+    }
+
+
+    /*
+       History.
+    */
+
+    await push(
+      ref(
+        db,
+        `sheets/${activeSheet}/history`
+      ),
+      {
+
+        user:
+          userName,
+
+        cell:
+          td.dataset.address,
+
+        value:
+          val,
+
+        time:
+          new Date()
+            .toLocaleString()
+
+      }
+    );
+
+
+    return;
+
+  }
+
+
+  // ===================================================
+  // NORMAL B-Z CELL
+  // ===================================================
+
+  const cellRef =
+    ref(
+      db,
+      `sheets/${activeSheet}/${r}_${c}`
+    );
+
+
+  if (val === "") {
+
+    await remove(
+      cellRef
+    );
+
+  }
+
+  else {
+
+    await set(
+      cellRef,
+      {
+
+        value:
+          val,
+
+        duplicate:
+          false
+
+      }
+    );
+
+  }
+
+
+  /*
+     History.
+  */
+
+  await push(
+    ref(
+      db,
+      `sheets/${activeSheet}/history`
+    ),
+    {
+
+      user:
+        userName,
+
+      cell:
+        td.dataset.address,
+
+      value:
+        val,
+
+      time:
+        new Date()
+          .toLocaleString()
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// LOAD SHEET DATA
+// =====================================================
+
+function loadSheetData() {
+
+  onValue(
+
+    ref(
+      db,
+      `sheets/${activeSheet}`
+    ),
+
+    snap => {
+
+      const data =
+        snap.val() || {};
+
+
+      for (
+        let r = 0;
+        r < rows;
+        r++
+      ) {
+
+        for (
+          let c = 0;
+          c < cols;
+          c++
+        ) {
+
+          const td =
+            table
+              .rows[r + 1]
+              ?.cells[c + 1];
+
+
+          if (!td) {
+
+            continue;
+
+          }
+
+
+          /*
+             Do not overwrite a cell while
+             the user is currently editing it.
+          */
+
+          if (
+            document.activeElement === td &&
+            td.contentEditable === "true"
+          ) {
+
+            continue;
+
+          }
+
+
+          const stored =
+            data[
+              `${r}_${c}`
+            ];
+
+
+          /*
+             New format.
+          */
+
+          if (
+            stored &&
+            typeof stored ===
+              "object"
+          ) {
+
+            td.innerText =
+              stored.value || "";
+
+
+            if (
+              stored.duplicate ===
+              true
+            ) {
+
+              td.classList.add(
+                "duplicate-cell"
+              );
+
+            }
+
+            else {
+
+              td.classList.remove(
+                "duplicate-cell"
+              );
+
+            }
+
+          }
+
+
+          /*
+             Old format compatibility.
+          */
+
+          else if (
+            typeof stored ===
+            "string"
+          ) {
+
+            td.innerText =
+              stored;
+
+            td.classList.remove(
+              "duplicate-cell"
+            );
+
+          }
+
+
+          /*
+             Empty.
+          */
+
+          else {
+
+            td.innerText =
+              "";
+
+            td.classList.remove(
+              "duplicate-cell"
+            );
+
+          }
+
+        }
+
+      }
+
+    }
+
+  );
+
+}
+
+
+// =====================================================
+// SEARCH
+// =====================================================
+
+document
+  .getElementById(
+    "searchInput"
+  )
+  .addEventListener(
+    "input",
+    () => {
+
+      const q =
+        document
+          .getElementById(
+            "searchInput"
+          )
+          .value
+          .toLowerCase()
+          .trim();
+
+
+      document
+        .querySelectorAll(
+          "#sheet td"
+        )
+        .forEach(td => {
+
+          td.classList.remove(
+            "highlight"
+          );
+
+        });
+
+
+      if (!q) {
+
+        return;
+
+      }
+
+
+      document
+        .querySelectorAll(
+          "#sheet td"
+        )
+        .forEach(td => {
+
+          if (
+
+            td.innerText
+              .toLowerCase()
+              .includes(q)
+
+            ||
+
+            td.dataset.address
+              .toLowerCase()
+              .includes(q)
+
+          ) {
+
+            td.classList.add(
+              "highlight"
+            );
+
+          }
+
+        });
+
+    }
+  );
+
+
+// =====================================================
+// HISTORY
+// =====================================================
+
+document
+  .getElementById(
+    "historyBtn"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      const popup =
+        document.getElementById(
+          "historyPopup"
+        );
+
+
+      const content =
+        document.getElementById(
+          "historyContent"
+        );
+
+
+      popup.style.display =
+        "block";
+
+
+      content.innerHTML =
+        "<p>Loading...</p>";
+
+
+      onValue(
+
+        ref(
+          db,
+          `sheets/${activeSheet}/history`
+        ),
+
+        snap => {
+
+          const data =
+            snap.val();
+
+
+          if (!data) {
+
+            content.innerHTML =
+              "<p>No history yet.</p>";
+
+            return;
+
+          }
+
+
+          const items =
+            Object.values(data)
+              .reverse();
+
+
+          content.innerHTML =
+            items.map(
+              h => `
+
+                <div class="history-item">
+
+                  <b>${h.user}</b>
+
+                  edited
+
+                  <b>${h.cell}</b>
+
+                  with
+
+                  "<i>${h.value}</i>"
+
+                  on ${h.time}
+
+                </div>
+
+              `
+            ).join("");
+
+        }
+
+      );
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "closeHistory"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      document
+        .getElementById(
+          "historyPopup"
+        )
+        .style.display =
+        "none";
+
+    }
+  );
+
+
+// =====================================================
+// EXPORT PDF
+// =====================================================
+
+document
+  .getElementById(
+    "exportBtn"
+  )
+  .addEventListener(
+    "click",
+    async () => {
+
+      const exportBtn =
+        document.getElementById(
+          "exportBtn"
+        );
+
+
+      exportBtn.innerText =
+        "⏳ Exporting...";
+
+
+      exportBtn.disabled =
+        true;
+
+
+      try {
+
+        const {
+          jsPDF
+        } =
+          window.jspdf;
+
+
+        const pdf =
+          new jsPDF({
+
+            orientation:
+              "landscape",
+
+            unit:
+              "mm",
+
+            format:
+              "a4"
+
+          });
+
+
+        pdf.setFontSize(16);
+
+
+        pdf.setFont(
+          "helvetica",
+          "bold"
+        );
+
+
+        pdf.text(
+          "JSW OGPR",
+          10,
+          12
+        );
+
+
+        const snapshot =
+          await new Promise(
+            resolve => {
+
+              onValue(
+
+                ref(
+                  db,
+                  `sheets/${activeSheet}`
+                ),
+
+                resolve,
+
+                {
+                  onlyOnce:
+                    true
+                }
+
+              );
+
+            }
+          );
+
+
+        const data =
+          snapshot.val() || {};
+
+
+        const headers = [
+
+          "#",
+
+          ...columnHeaders.map(
+            (h, i) =>
+              h || colLetter(i)
+          )
+
+        ];
+
+
+        const body = [];
+
+
+        for (
+          let r = 0;
+          r < rows;
+          r++
+        ) {
+
+          const row = [];
+
+
+          for (
+            let c = 0;
+            c < cols;
+            c++
+          ) {
+
+            const stored =
+              data[
+                `${r}_${c}`
+              ];
+
+
+            let value =
+              "";
+
+
+            if (
+              stored &&
+              typeof stored ===
+                "object"
+            ) {
+
+              value =
+                stored.value || "";
+
+            }
+
+            else if (
+              typeof stored ===
+              "string"
+            ) {
+
+              value =
+                stored;
+
+            }
+
+
+            row.push(value);
+
+          }
+
+
+          body.push([
+            r + 1,
+            ...row
+          ]);
+
+        }
+
+
+        pdf.autoTable({
+
+          startY:
+            18,
+
+          head:
+            [headers],
+
+          body:
+            body,
+
+          theme:
+            "grid",
+
+          styles: {
+
+            fontSize:
+              3,
+
+            cellPadding:
+              0.5,
+
+            overflow:
+              "linebreak",
+
+            halign:
+              "center",
+
+            valign:
+              "middle"
+
+          },
+
+          headStyles: {
+
+            fontSize:
+              4,
+
+            fontStyle:
+              "bold"
+
+          },
+
+          margin: {
+
+            top:
+              18,
+
+            left:
+              5,
+
+            right:
+              5,
+
+            bottom:
+              5
+
+          },
+
+          showHead:
+            "everyPage"
+
+        });
+
+
+        // =====================================================
+        // MOBILE-SAFE PDF DOWNLOAD
+        // =====================================================
+        // pdf.save() works on many browsers, but Android WebView /
+        // some phone app browsers may block the automatic download.
+        // Create a Blob and open it in a new tab as a fallback.
+
+        const pdfBlob =
+          pdf.output("blob");
+
+        const pdfUrl =
+          URL.createObjectURL(pdfBlob);
+
+        const downloadLink =
+          document.createElement("a");
+
+        downloadLink.href =
+          pdfUrl;
+
+        downloadLink.download =
+          "JSW_OGPR.pdf";
+
+        downloadLink.style.display =
+          "none";
+
+        document.body.appendChild(
+          downloadLink
+        );
+
+        try {
+
+          downloadLink.click();
+
+        }
+        catch (downloadError) {
+
+          console.log(
+            "Direct download blocked, opening PDF instead:",
+            downloadError
+          );
+
+        }
+
+        // Mobile/WebView fallback:
+        // If the browser blocks the download attribute,
+        // open the PDF so the user can use the phone's
+        // Share/Download option.
+        setTimeout(() => {
+
+          if (
+            /Android|iPhone|iPad|iPod/i.test(
+              navigator.userAgent
+            )
+          ) {
+
+            window.open(
+              pdfUrl,
+              "_blank"
+            );
+
+          }
+
+          setTimeout(() => {
+
+            URL.revokeObjectURL(
+              pdfUrl
+            );
+
+            if (
+              document.body.contains(
+                downloadLink
+              )
+            ) {
+
+              document.body.removeChild(
+                downloadLink
+              );
+
+            }
+
+          }, 10000);
+
+        }, 500);
+
+      }
+
+      catch(error) {
+
+        console.error(
+          error
+        );
+
+
+        alert(
+          "❌ Export failed."
+        );
+
+      }
+
+      finally {
+
+        exportBtn.innerText =
+          "⬇ Download PDF";
+
+
+        exportBtn.disabled =
+          false;
+
+      }
+
+    }
+  );
+
+
+// =====================================================
+// LOCK WHEN MINIMIZED / TAB CHANGED
+// =====================================================
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+
+    if (
+      document.visibilityState ===
+      "hidden"
+    ) {
+
+      lockEditing();
+
+    }
+
+  }
+);
+
+
+// =====================================================
+// LOCK WHEN PAGE CLOSED
+// =====================================================
+
+window.addEventListener(
+  "pagehide",
+  () => {
+
+    lockEditing();
+
+  }
+);
+
+
+// =====================================================
+// LOCK EVERYTHING
+// =====================================================
+
+function lockEditing() {
+
+  editingEnabled =
+    false;
+
+
+  userName =
+    "";
+
+
+  columnAUnlocked =
+    false;
+
+
+  selectedCell =
+    null;
+
+
+  document
+    .querySelectorAll(
+      "#sheet td"
+    )
+    .forEach(td => {
+
+      td.contentEditable =
+        false;
+
+
+      td.classList.remove(
+        "protected-unlocked"
+      );
+
+    });
+
+
+  document
+    .getElementById(
+      "namePopupOverlay"
+    )
+    .style.display =
+    "none";
+
+
+  document
+    .getElementById(
+      "passwordPopupOverlay"
+    )
+    .style.display =
+    "none";
+
+
+  document
+    .getElementById(
+      "datePopupOverlay"
+    )
+    .style.display =
+    "none";
+
+}
+
+
+// =====================================================
+// INITIALIZE
+// =====================================================
+
+renderTable();
+
+loadSheetData();
+
+
+// =====================================================
+// NOTIFICATION PERMISSION
+// =====================================================
+
+if (
+  "Notification" in window &&
+  Notification.permission !==
+    "granted"
+) {
+
+  Notification
+    .requestPermission()
+    .catch(() => {});
+
+}
+
+</script>
+
+</body>
+
+</html>
