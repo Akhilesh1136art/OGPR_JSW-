@@ -122,6 +122,76 @@ body {
 
 
 /* =====================================================
+   ZOOM TOOLBAR & SCALING WRAPPER
+   ===================================================== */
+
+.controls-wrapper {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2000;
+}
+
+.zoom-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background-color: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.zoom-btn {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.1s ease;
+}
+
+.zoom-btn:active {
+  background-color: #e2e8f0;
+  transform: scale(0.95);
+}
+
+.zoom-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.zoom-value {
+  min-width: 52px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.reset-btn svg {
+  stroke: #0f172a;
+}
+
+#sheet {
+  transform-origin: top left;
+  transition: transform 0.15s ease-out;
+}
+
+
+/* =====================================================
    SHEET CONTAINER & ENLARGED CUSTOM SCROLLBAR
    ===================================================== */
 
@@ -1157,6 +1227,24 @@ body {
 
 
 <!-- =====================================================
+     ZOOM TOOLBAR OVERLAY
+     ===================================================== -->
+
+<div class="controls-wrapper">
+  <div class="zoom-toolbar">
+    <button class="zoom-btn" id="zoom-out" aria-label="Zoom Out">−</button>
+    <span class="zoom-value" id="zoom-value">100%</span>
+    <button class="zoom-btn" id="zoom-in" aria-label="Zoom In">+</button>
+    <button class="zoom-btn reset-btn" id="zoom-reset" aria-label="Reset Zoom">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+
+<!-- =====================================================
      NAME POPUP
      ===================================================== -->
 
@@ -1450,6 +1538,34 @@ let selectedCell = null;
 const COLUMN_A_PASSWORD = "JSW";
 const COLUMN_B_PASSWORD = "NEO@2012";
 const COLUMN_C_PASSWORD = "AUGUST";
+
+
+// =====================================================
+// ZOOM FUNCTIONALITY
+// =====================================================
+
+let currentZoom = 100;
+const ZOOM_STEP = 10;
+const MIN_ZOOM = 50;
+const MAX_ZOOM = 200;
+
+const zoomValueEl = document.getElementById('zoom-value');
+const zoomInBtn = document.getElementById('zoom-in');
+const zoomOutBtn = document.getElementById('zoom-out');
+const zoomResetBtn = document.getElementById('zoom-reset');
+
+function applySheetZoom(newZoom) {
+  currentZoom = Math.min(Math.max(newZoom, MIN_ZOOM), MAX_ZOOM);
+  zoomValueEl.textContent = `${currentZoom}%`;
+  table.style.transform = `scale(${currentZoom / 100})`;
+
+  zoomOutBtn.disabled = currentZoom <= MIN_ZOOM;
+  zoomInBtn.disabled = currentZoom >= MAX_ZOOM;
+}
+
+zoomInBtn.addEventListener('click', () => applySheetZoom(currentZoom + ZOOM_STEP));
+zoomOutBtn.addEventListener('click', () => applySheetZoom(currentZoom - ZOOM_STEP));
+zoomResetBtn.addEventListener('click', () => applySheetZoom(100));
 
 
 // =====================================================
