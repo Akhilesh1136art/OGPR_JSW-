@@ -114,7 +114,7 @@ body {
 
 
 /* =====================================================
-   SHEET
+   SHEET CONTAINER & CUSTOM SCROLLBAR
    ===================================================== */
 
 #sheetContainer {
@@ -123,9 +123,54 @@ body {
 
   height: calc(100vh - 120px);
 
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: scroll;
 
   background: white;
+
+  /* Firefox standard scrollbar */
+  scrollbar-width: auto;
+  scrollbar-color: #787878 #f1f1f1;
+}
+
+/* Custom Scrollbar for Chrome, Edge, Safari */
+#sheetContainer::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+#sheetContainer::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-left: 1px solid #dcdcdc;
+}
+
+#sheetContainer::-webkit-scrollbar-thumb {
+  background: #787878;
+  border-radius: 8px;
+  border: 3px solid #f1f1f1;
+}
+
+#sheetContainer::-webkit-scrollbar-thumb:hover {
+  background: #555555;
+}
+
+#sheetContainer::-webkit-scrollbar-button:single-button {
+  background-color: #f1f1f1;
+  display: block;
+  border-style: solid;
+  height: 16px;
+  width: 16px;
+}
+
+/* Scrollbar Buttons / Arrows */
+#sheetContainer::-webkit-scrollbar-button:single-button:vertical:decrement {
+  border-width: 0 4px 6px 4px;
+  border-color: transparent transparent #555555 transparent;
+}
+
+#sheetContainer::-webkit-scrollbar-button:single-button:vertical:increment {
+  border-width: 6px 4px 0 4px;
+  border-color: #555555 transparent transparent transparent;
 }
 
 table {
@@ -901,10 +946,6 @@ td.highlight {
 }
 
 
-
-
-
-
 /* =====================================================
    MOBILE TABLE WIDTH FIX
    ===================================================== */
@@ -923,17 +964,6 @@ body {
 *::before,
 *::after {
   box-sizing: border-box;
-}
-
-#sheetContainer {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
-  overflow-x: auto;
-  overflow-y: auto;
-  box-sizing: border-box;
-  -webkit-overflow-scrolling: touch;
 }
 
 #sheet {
@@ -1088,8 +1118,6 @@ body {
   <button id="exportBtn">
     ⬇ Download PDF
   </button>
-
-
 
 </div>
 
@@ -1367,7 +1395,7 @@ const db =
 
 const rows = 1000;
 
-const cols = 7;
+const cols = 26;
 
 const activeSheet = "section1";
 
@@ -1576,10 +1604,6 @@ function renderTable() {
       }
 
 
-      /*
-         Column D = Date
-      */
-
       if (c === 3) {
 
         td.classList.add(
@@ -1633,10 +1657,6 @@ function handleCellClick(e) {
     td;
 
 
-  // ===================================================
-  // COLUMN A
-  // ===================================================
-
   if (col === 0) {
 
     if (columnAUnlocked) {
@@ -1666,10 +1686,6 @@ function handleCellClick(e) {
   }
 
 
-  // ===================================================
-  // COLUMN B
-  // ===================================================
-
   if (col === 1) {
 
     if (columnBUnlocked) {
@@ -1694,10 +1710,6 @@ function handleCellClick(e) {
 
   }
 
-
-  // ===================================================
-  // COLUMN C
-  // ===================================================
 
   if (col === 2) {
 
@@ -1724,10 +1736,6 @@ function handleCellClick(e) {
   }
 
 
-  // ===================================================
-  // COLUMN D - DATE
-  // ===================================================
-
   if (col === 3) {
 
     if (!editingEnabled) {
@@ -1745,10 +1753,6 @@ function handleCellClick(e) {
 
   }
 
-
-  // ===================================================
-  // OTHER COLUMNS
-  // ===================================================
 
   if (editingEnabled) {
 
@@ -1857,13 +1861,6 @@ document
         true;
 
 
-      /*
-         Unlock normal cells.
-
-         Columns A, B, and C remain protected.
-         Column D uses calendar.
-      */
-
       document
         .querySelectorAll(
           "#sheet td"
@@ -1905,10 +1902,6 @@ document
         "none";
 
 
-      /*
-         Columns A, B, or C -> password.
-      */
-
       if (protectedCol >= 0 && protectedCol <= 2) {
 
         openPasswordPopup(protectedCol);
@@ -1917,10 +1910,6 @@ document
 
       }
 
-
-      /*
-         Date -> calendar.
-      */
 
       if (
         selectedCell &&
@@ -2854,20 +2843,12 @@ async function saveCell(e) {
     Number(td.dataset.col);
 
 
-  /*
-     Date is handled separately.
-  */
-
   if (col === 3) {
 
     return;
 
   }
 
-
-  /*
-     Columns A, B & C require passwords.
-  */
 
   if (
     col === 0 &&
@@ -2897,10 +2878,6 @@ async function saveCell(e) {
   }
 
 
-  /*
-     Other columns require name.
-  */
-
   if (
     col !== 0 &&
     col !== 1 &&
@@ -2926,15 +2903,6 @@ async function saveCell(e) {
     td.innerText.trim();
 
 
-  /*
-     COLUMN A RULE:
-     - Empty is allowed so a user can clear a cell.
-     - Otherwise it must contain exactly 9
-       letters or numbers.
-     - No spaces or special characters are allowed.
-     - Invalid values are NOT saved to Firebase.
-  */
-
   if (
     col === 0 &&
     val !== "" &&
@@ -2955,10 +2923,6 @@ async function saveCell(e) {
 
   }
 
-
-  // ===================================================
-  // COLUMN A
-  // ===================================================
 
   if (col === 0) {
 
@@ -3066,10 +3030,6 @@ async function saveCell(e) {
 
   }
 
-
-  // ===================================================
-  // NORMAL B-Z CELL
-  // ===================================================
 
   const cellRef =
     ref(
