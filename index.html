@@ -115,6 +115,87 @@ body {
 
 
 /* =====================================================
+   ZOOM CONTROLS
+   ===================================================== */
+
+.zoom-controls {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 4px;
+
+  margin-left: auto;
+}
+
+.zoom-controls button {
+
+  width: 36px;
+
+  height: 34px;
+
+  padding: 0 !important;
+
+  border: 1px solid #cbd5e1;
+
+  background: #f8fafc;
+
+  color: #172033;
+
+  border-radius: 5px;
+
+  font-size: 20px;
+
+  cursor: pointer;
+}
+
+.zoom-controls button:hover {
+
+  background: #e2e8f0;
+}
+
+#zoomLevel {
+
+  min-width: 58px;
+
+  text-align: center;
+
+  font-size: 13px;
+
+  font-weight: bold;
+
+  color: #334155;
+}
+
+#sheetZoomWrapper {
+
+  width: max-content;
+
+  min-width: 100%;
+}
+
+#sheet {
+
+  zoom: 1;
+}
+
+@media (max-width: 700px) {
+
+  .toolbar {
+    flex-wrap: wrap;
+  }
+
+  .zoom-controls {
+    margin-left: 0;
+  }
+
+  #searchInput {
+    width: min(280px, 70vw);
+  }
+}
+
+/* =====================================================
    SHEET
    ===================================================== */
 
@@ -145,9 +226,9 @@ td {
 
   border: 1px solid #cbd5e1;
 
-  min-width: 160px;
+  min-width: 135px;
 
-  height: 50px;
+  height: 38px;
 
   padding: 8px;
 
@@ -169,7 +250,7 @@ td {
 
   color: white;
 
-  height: 55px;
+  height: 45px;
 
   position: sticky;
 
@@ -298,24 +379,11 @@ td[contenteditable="true"]:focus {
   position: relative;
 }
 
-.protected-cell::after {
-
-  content: "🔒";
-
-  position: absolute;
-
-  right: 5px;
-
-  top: 5px;
-
-  font-size: 12px;
-
-  opacity: 0.55;
-}
-
+/* No lock icon inside protected cells. */
+.protected-cell::after,
 .protected-unlocked::after {
 
-  content: "";
+  content: none !important;
 }
 
 
@@ -330,8 +398,23 @@ td[contenteditable="true"]:focus {
   color: white !important;
 
   font-weight: bold !important;
+  outline: 2px solid #b91c1c;
+  outline-offset: -2px;
 }
 
+
+/* Unlocked protected cells stay light yellow until the session locks. */
+td.protected-unlocked {
+  background: #fff9c4 !important;
+  color: #172033;
+  cursor: text;
+}
+
+td.protected-unlocked:focus {
+  background: #fff9c4 !important;
+  outline: 2px solid #007bff;
+  outline-offset: -2px;
+}
 
 /* =====================================================
    SEARCH
@@ -339,7 +422,20 @@ td[contenteditable="true"]:focus {
 
 td.highlight {
 
-  background: #fff176 !important;
+  background: #32cd32 !important;
+
+  color: #000 !important;
+
+  font-weight: bold;
+}
+
+/* Duplicate cells always remain red. */
+.duplicate-cell {
+  background: #ff3b30 !important;
+  color: white !important;
+  font-weight: bold !important;
+  outline: 2px solid #b91c1c;
+  outline-offset: -2px;
 }
 
 
@@ -1094,7 +1190,12 @@ body {
     ⬇ Download PDF
   </button>
 
-
+  <div class="zoom-controls" aria-label="Sheet zoom controls">
+    <button id="zoomOutBtn" title="Zoom out">−</button>
+    <span id="zoomLevel">100%</span>
+    <button id="zoomInBtn" title="Zoom in">+</button>
+    <button id="zoomResetBtn" title="Reset zoom">↺</button>
+  </div>
 
 </div>
 
@@ -1241,14 +1342,18 @@ body {
     </div>
 
     <h2>
-      It already exists!
+      Duplicate value found!
     </h2>
 
     <p>
 
-      This value already exists in
+      The same value already exists in:
 
       <span id="duplicateCellName"></span>.
+
+      <br><br>
+
+      All matching cells have been highlighted in red.
 
     </p>
 
@@ -1391,6 +1496,8 @@ let userName = "";
 let editingEnabled = false;
 
 let columnAUnlocked = false;
+let columnBUnlocked = false;
+let columnCUnlocked = false;
 
 let selectedCell = null;
 
@@ -1400,6 +1507,8 @@ let selectedCell = null;
 // =====================================================
 
 const COLUMN_A_PASSWORD = "JSW";
+const COLUMN_B_PASSWORD = "NEO@2012";
+const COLUMN_C_PASSWORD = "AUGUST";
 
 
 // =====================================================
@@ -1564,7 +1673,7 @@ function renderTable() {
       td.contentEditable = false;
 
 
-      if (c === 0) {
+      if (c === 0 || c === 1 || c === 2) {
 
         td.classList.add(
           "protected-cell"
@@ -1625,91 +1734,97 @@ function renderTable() {
 
 function handleCellClick(e) {
 
-  const td =
-    e.currentTarget;
+  const td = e.currentTarget;
+  const col = Number(td.dataset.col);
 
-
-  const col =
-    Number(td.dataset.col);
-
-
-  selectedCell =
-    td;
-
+  selectedCell = td;
 
   // ===================================================
   // COLUMN A
   // ===================================================
-
   if (col === 0) {
 
     if (columnAUnlocked) {
-
-      /*
-         Remember the value before editing so an invalid
-         9-character entry can be rejected safely.
-      */
-
-      td.dataset.previousValue =
-        td.innerText.trim();
-
+      td.dataset.previousValue = td.innerText.trim();
+      td.contentEditable = true;
+      td.classList.add("protected-unlocked");
       return;
-
     }
-
 
     if (userName) {
-
-      openPasswordPopup();
-
-    }
-
-    else {
-
+      openPasswordPopup("A");
+    } else {
       openNamePopup(true);
-
     }
-
     return;
-
   }
 
+  // ===================================================
+  // COLUMN B
+  // ===================================================
+  if (col === 1) {
+
+    if (columnBUnlocked) {
+      td.dataset.previousValue = td.innerText.trim();
+      td.contentEditable = true;
+      td.classList.add("protected-unlocked");
+      return;
+    }
+
+    if (!editingEnabled) {
+      openNamePopup(false);
+      return;
+    }
+
+    openPasswordPopup("B");
+    return;
+  }
+
+  // ===================================================
+  // COLUMN C
+  // ===================================================
+  if (col === 2) {
+
+    if (columnCUnlocked) {
+      td.dataset.previousValue = td.innerText.trim();
+      td.contentEditable = true;
+      td.classList.add("protected-unlocked");
+      return;
+    }
+
+    if (!editingEnabled) {
+      openNamePopup(false);
+      return;
+    }
+
+    openPasswordPopup("C");
+    return;
+  }
 
   // ===================================================
   // COLUMN D - DATE
   // ===================================================
-
   if (col === 3) {
 
     if (!editingEnabled) {
-
       openNamePopup(false);
-
       return;
-
     }
 
-
     openDatePopup();
-
     return;
-
   }
-
 
   // ===================================================
   // OTHER COLUMNS
   // ===================================================
-
   if (editingEnabled) {
-
+    td.contentEditable = true;
+    td.focus();
     return;
-
   }
 
-
   openNamePopup(false);
-
 }
 
 
@@ -1863,7 +1978,7 @@ document
 
       if (isColumnA) {
 
-        openPasswordPopup();
+        openPasswordPopup("A");
 
         return;
 
@@ -1871,24 +1986,31 @@ document
 
 
       /*
-         Date -> calendar.
+         Columns B and C -> password.
       */
 
-      if (
-        selectedCell &&
-        Number(
-          selectedCell.dataset.col
-        ) === 3
-      ) {
-
-        openDatePopup();
-
-        return;
-
-      }
-
-
       if (selectedCell) {
+
+        const selectedCol = Number(selectedCell.dataset.col);
+
+        if (selectedCol === 1) {
+          openPasswordPopup("B");
+          return;
+        }
+
+        if (selectedCol === 2) {
+          openPasswordPopup("C");
+          return;
+        }
+
+        /*
+           Date -> calendar.
+        */
+
+        if (selectedCol === 3) {
+          openDatePopup();
+          return;
+        }
 
         selectedCell.focus();
 
@@ -1966,128 +2088,102 @@ document
 // PASSWORD POPUP
 // =====================================================
 
-function openPasswordPopup() {
+function openPasswordPopup(column = "A") {
 
-  const overlay =
-    document.getElementById(
-      "passwordPopupOverlay"
-    );
-
-
-  const input =
-    document.getElementById(
-      "passwordInput"
-    );
-
-
-  const error =
-    document.getElementById(
-      "passwordError"
-    );
-
+  const overlay = document.getElementById("passwordPopupOverlay");
+  const input = document.getElementById("passwordInput");
+  const error = document.getElementById("passwordError");
+  const title = document.querySelector("#passwordPopup h2");
+  const description = document.querySelector("#passwordPopup p");
 
   input.value = "";
-
   error.innerText = "";
+  overlay.dataset.column = column;
 
+  if (column === "A") {
+    title.innerText = "Column A is Protected";
+    description.innerText = "Enter password to edit JSW OGPR's No";
+  }
+  else if (column === "B") {
+    title.innerText = "Column B is Protected";
+    description.innerText = "Enter password to edit Verified by Neo";
+  }
+  else if (column === "C") {
+    title.innerText = "Column C is Protected";
+    description.innerText = "Enter password to edit Timken Permit";
+  }
 
-  overlay.style.display =
-    "flex";
+  overlay.style.display = "flex";
 
-
-  setTimeout(
-    () => input.focus(),
-    100
-  );
+  setTimeout(() => input.focus(), 100);
 
 }
 
 
 // =====================================================
-// UNLOCK COLUMN A
+// UNLOCK PROTECTED COLUMN CELL
 // =====================================================
 
-function unlockColumnA() {
+function unlockProtectedColumn() {
 
-  const input =
-    document.getElementById(
-      "passwordInput"
-    );
-
-
-  const error =
-    document.getElementById(
-      "passwordError"
-    );
-
-
-  const password =
-    input.value;
-
+  const input = document.getElementById("passwordInput");
+  const error = document.getElementById("passwordError");
+  const overlay = document.getElementById("passwordPopupOverlay");
+  const column = overlay.dataset.column;
+  const password = input.value;
 
   if (password === "") {
-
-    error.innerText =
-      "⚠️ Please enter password.";
-
+    error.innerText = "⚠️ Please enter password.";
     input.focus();
-
     return;
-
   }
 
+  let correctPassword = "";
 
-  if (
-    password !==
-    COLUMN_A_PASSWORD
-  ) {
+  if (column === "A") {
+    correctPassword = COLUMN_A_PASSWORD;
+  } else if (column === "B") {
+    correctPassword = COLUMN_B_PASSWORD;
+  } else if (column === "C") {
+    correctPassword = COLUMN_C_PASSWORD;
+  }
 
-    error.innerText =
-      "❌ Incorrect password.";
-
+  if (password !== correctPassword) {
+    error.innerText = "❌ Incorrect password.";
     input.focus();
-
     input.select();
-
     return;
-
   }
 
+  // Unlock the ENTIRE protected column for this editing session.
+  // The password will not be requested again for that column until
+  // the page is refreshed, minimized, or the tab/app is hidden.
+  let columnIndex = -1;
 
-  columnAUnlocked =
-    true;
-
+  if (column === "A") {
+    columnAUnlocked = true;
+    columnIndex = 0;
+  } else if (column === "B") {
+    columnBUnlocked = true;
+    columnIndex = 1;
+  } else if (column === "C") {
+    columnCUnlocked = true;
+    columnIndex = 2;
+  }
 
   document
-    .querySelectorAll(
-      '#sheet td[data-col="0"]'
-    )
+    .querySelectorAll(`#sheet td[data-col="${columnIndex}"]`)
     .forEach(td => {
-
-      td.contentEditable =
-        true;
-
-      td.classList.add(
-        "protected-unlocked"
-      );
-
+      td.contentEditable = true;
+      td.classList.add("protected-unlocked");
     });
 
-
-  document
-    .getElementById(
-      "passwordPopupOverlay"
-    )
-    .style.display =
-    "none";
-
+  overlay.style.display = "none";
 
   if (selectedCell) {
-
+    selectedCell.dataset.previousValue = selectedCell.innerText.trim();
     selectedCell.focus();
-
   }
-
 }
 
 
@@ -2095,66 +2191,21 @@ function unlockColumnA() {
 // PASSWORD BUTTONS
 // =====================================================
 
-document
-  .getElementById(
-    "unlockPasswordBtn"
-  )
-  .addEventListener(
-    "click",
-    unlockColumnA
-  );
+document.getElementById("unlockPasswordBtn").addEventListener("click", unlockProtectedColumn);
 
+document.getElementById("cancelPasswordBtn").addEventListener("click", () => {
+  document.getElementById("passwordPopupOverlay").style.display = "none";
+  selectedCell = null;
+});
 
-document
-  .getElementById(
-    "cancelPasswordBtn"
-  )
-  .addEventListener(
-    "click",
-    () => {
-
-      document
-        .getElementById(
-          "passwordPopupOverlay"
-        )
-        .style.display =
-        "none";
-
-
-      selectedCell =
-        null;
-
-    }
-  );
-
-
-document
-  .getElementById(
-    "passwordInput"
-  )
-  .addEventListener(
-    "keydown",
-    e => {
-
-      if (e.key === "Enter") {
-
-        unlockColumnA();
-
-      }
-
-
-      if (e.key === "Escape") {
-
-        document
-          .getElementById(
-            "cancelPasswordBtn"
-          )
-          .click();
-
-      }
-
-    }
-  );
+document.getElementById("passwordInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    unlockProtectedColumn();
+  }
+  if (e.key === "Escape") {
+    document.getElementById("cancelPasswordBtn").click();
+  }
+});
 
 
 // =====================================================
@@ -2582,150 +2633,91 @@ function getColumnACells() {
 // RECALCULATE COLUMN A DUPLICATES
 // =====================================================
 
-async function recalculateColumnADuplicates() {
+async function recalculateColumnADuplicates(showPopup = false, changedValue = "") {
 
-  const cells =
-    getColumnACells();
-
-
+  const cells = getColumnACells();
   const groups = {};
 
-
+  // Find all non-empty Column A values
   cells.forEach(cell => {
+    const value = cell.innerText.trim();
 
-    const value =
-      cell.innerText.trim();
+    if (!value) return;
 
-
-    if (!value) {
-
-      return;
-
-    }
-
-
-    const key =
-      value.toLowerCase();
-
+    const key = value.toLowerCase();
 
     if (!groups[key]) {
-
       groups[key] = [];
-
     }
 
-
     groups[key].push(cell);
+  });
+
+  // Clear all previous duplicate markings first
+  cells.forEach(cell => {
+    cell.classList.remove("duplicate-cell");
+  });
+
+  // Mark every duplicate cell red
+  Object.values(groups).forEach(group => {
+
+    if (group.length > 1) {
+
+      group.forEach(cell => {
+        cell.classList.add("duplicate-cell");
+      });
+
+    }
 
   });
 
-
-  const duplicateCells =
-    new Set();
-
-
-  Object.values(groups)
-    .forEach(group => {
-
-      if (group.length > 1) {
-
-        group.forEach(cell => {
-
-          duplicateCells.add(
-            cell
-          );
-
-        });
-
-      }
-
-    });
-
-
+  // Save duplicate status to Firebase
   const promises = [];
-
 
   for (const cell of cells) {
 
-    const value =
-      cell.innerText.trim();
+    const value = cell.innerText.trim();
 
+    if (!value) continue;
 
     const duplicate =
-      duplicateCells.has(cell);
+      value.toLowerCase() in groups &&
+      groups[value.toLowerCase()].length > 1;
 
-
-    /*
-       Update screen.
-    */
-
-    if (duplicate) {
-
-      cell.classList.add(
-        "duplicate-cell"
-      );
-
-    }
-
-    else {
-
-      cell.classList.remove(
-        "duplicate-cell"
-      );
-
-    }
-
-
-    const r =
-      cell.dataset.row;
-
-    const c =
-      cell.dataset.col;
-
+    const r = cell.dataset.row;
+    const c = cell.dataset.col;
 
     const cellRef =
-      ref(
-        db,
-        `sheets/${activeSheet}/${r}_${c}`
-      );
+      ref(db, `sheets/${activeSheet}/${r}_${c}`);
 
-
-    if (!value) {
-
-      promises.push(
-        remove(cellRef)
-      );
-
-    }
-
-    else {
-
-      promises.push(
-        set(
-          cellRef,
-          {
-
-            value:
-              value,
-
-            duplicate:
-              duplicate
-
-          }
-        )
-      );
-
-    }
-
+    promises.push(
+      set(cellRef, {
+        value: value,
+        duplicate: duplicate
+      })
+    );
   }
 
+  await Promise.all(promises);
 
-  await Promise.all(
-    promises
-  );
+  // Show warning popup if the newly entered value is duplicated
+  if (showPopup && changedValue) {
 
+    const matchingCells = cells.filter(cell =>
+      cell.innerText.trim().toLowerCase() ===
+      changedValue.trim().toLowerCase()
+    );
+
+    if (matchingCells.length > 1) {
+
+      const locations = matchingCells.map(
+        cell => cell.dataset.address
+      );
+
+      showDuplicatePopup(locations.join(", "));
+    }
+  }
 }
-
 
 // =====================================================
 // COLUMN A VALIDATION
@@ -2806,13 +2798,16 @@ async function saveCell(e) {
      Column A requires password.
   */
 
-  if (
-    col === 0 &&
-    !columnAUnlocked
-  ) {
-
+  if (col === 0 && !columnAUnlocked) {
     return;
+  }
 
+  if (col === 1 && !columnBUnlocked) {
+    return;
+  }
+
+  if (col === 2 && !columnCUnlocked) {
+    return;
   }
 
 
@@ -2920,7 +2915,7 @@ async function saveCell(e) {
        Recalculate duplicates.
     */
 
-    await recalculateColumnADuplicates();
+    await recalculateColumnADuplicates(true, val);
 
 
     /*
@@ -2947,20 +2942,16 @@ async function saveCell(e) {
         matchingCells.length > 1
       ) {
 
-        const other =
-          matchingCells.find(
+        const locations =
+          matchingCells.map(
             cell =>
-              cell !== td
+              cell.dataset.address
           );
 
 
-        if (other) {
-
-          showDuplicatePopup(
-            other.dataset.address
-          );
-
-        }
+        showDuplicatePopup(
+          locations.join(", ")
+        );
 
       }
 
@@ -2994,6 +2985,10 @@ async function saveCell(e) {
       }
     );
 
+
+    // Keep Column A unlocked for the rest of this session.
+    // It will lock only when the page/tab is hidden,
+    // minimized, refreshed, or the session is otherwise reset.
 
     return;
 
@@ -3064,6 +3059,11 @@ async function saveCell(e) {
     }
   );
 
+
+  // Protected columns remain unlocked for this session.
+  // They are re-locked by lockEditing() when the app is hidden
+  // or the page is refreshed/minimized.
+
 }
 
 
@@ -3071,7 +3071,7 @@ async function saveCell(e) {
 // LOAD SHEET DATA
 // =====================================================
 
-function loadSheetData() {
+async function loadSheetData() {
 
   onValue(
 
@@ -3203,13 +3203,14 @@ function loadSheetData() {
           }
 
         }
-
+        
       }
-
+       // Recheck Column A duplicates after loading Firebase data
+       await recalculateColumnADuplicates(false);
     }
 
   );
-
+  
 }
 
 
@@ -3285,6 +3286,40 @@ document
 
     }
   );
+
+
+// =====================================================
+// SHEET ZOOM
+// =====================================================
+
+const MIN_ZOOM = 0.75;
+const MAX_ZOOM = 1.50;
+const ZOOM_STEP = 0.10;
+let sheetZoom = 1;
+
+function updateZoom() {
+
+  table.style.zoom = sheetZoom;
+
+  document.getElementById("zoomLevel").innerText =
+    `${Math.round(sheetZoom * 100)}%`;
+
+}
+
+document.getElementById("zoomOutBtn").addEventListener("click", () => {
+  sheetZoom = Math.max(MIN_ZOOM, +(sheetZoom - ZOOM_STEP).toFixed(2));
+  updateZoom();
+});
+
+document.getElementById("zoomInBtn").addEventListener("click", () => {
+  sheetZoom = Math.min(MAX_ZOOM, +(sheetZoom + ZOOM_STEP).toFixed(2));
+  updateZoom();
+});
+
+document.getElementById("zoomResetBtn").addEventListener("click", () => {
+  sheetZoom = 1;
+  updateZoom();
+});
 
 
 // =====================================================
@@ -3796,6 +3831,12 @@ function lockEditing() {
   columnAUnlocked =
     false;
 
+  columnBUnlocked =
+    false;
+
+  columnCUnlocked =
+    false;
+
 
   selectedCell =
     null;
@@ -3849,6 +3890,8 @@ function lockEditing() {
 // =====================================================
 
 renderTable();
+
+updateZoom();
 
 loadSheetData();
 
