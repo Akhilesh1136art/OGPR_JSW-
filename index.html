@@ -14,11 +14,16 @@
   box-sizing: border-box;
 }
 
-body {
+html, body {
   font-family: Arial, sans-serif;
   margin: 0;
   background: #f7f9fc;
   color: #222;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  /* Prevents pull-to-refresh on mobile browsers when scrolling back to the top */
+  overscroll-behavior-y: contain;
 }
 
 
@@ -180,11 +185,6 @@ body {
   stroke: #0f172a;
 }
 
-#sheet {
-  transform-origin: top left;
-  transition: transform 0.15s ease-out;
-}
-
 
 /* =====================================================
    SHEET CONTAINER
@@ -199,11 +199,16 @@ body {
   overflow: auto;
 
   background: white;
+
+  /* Prevent swipe-down refresh while scrolling top */
+  overscroll-behavior: contain;
 }
 
 table {
 
-  border-collapse: collapse;
+  border-collapse: separate;
+
+  border-spacing: 0;
 
   width: max-content;
 
@@ -215,7 +220,8 @@ table {
 th,
 td {
 
-  border: 1px solid #cbd5e1;
+  border-right: 1px solid #cbd5e1;
+  border-bottom: 1px solid #cbd5e1;
 
   min-width: 160px;
 
@@ -232,10 +238,10 @@ td {
 
 
 /* =====================================================
-   COLUMN HEADERS
+   COLUMN HEADERS & STICKY SETTINGS
    ===================================================== */
 
-#sheet > tr:first-child th {
+#sheet tr:first-child th {
 
   background: #08639a;
 
@@ -247,12 +253,12 @@ td {
 
   top: 0;
 
-  z-index: 10;
+  z-index: 30;
 
   font-weight: bold;
 }
 
-#sheet > tr:first-child th:first-child {
+#sheet tr:first-child th:first-child {
 
   min-width: 52px;
 
@@ -261,6 +267,14 @@ td {
   text-align: center;
 
   background: #075681;
+
+  position: sticky;
+
+  left: 0;
+
+  top: 0;
+
+  z-index: 50;
 }
 
 .column-letter {
@@ -294,7 +308,7 @@ td {
 
   left: 0;
 
-  z-index: 5;
+  z-index: 20;
 
   min-width: 52px;
 
@@ -978,28 +992,11 @@ td.highlight {
    MOBILE TABLE WIDTH FIX
    ===================================================== */
 
-html,
-body {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  box-sizing: border-box;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
 #sheet {
   margin: 0;
   max-width: none;
   width: max-content;
   min-width: 100%;
-  border-collapse: collapse;
 }
 
 @media (max-width: 700px) {
@@ -1018,34 +1015,21 @@ body {
 
 
 /* =====================================================
-   FREEZE COLUMN A
+   FREEZE COLUMNS A & B
    ===================================================== */
-
-#sheet th:first-child,
-#sheet td:first-child {
-  position: sticky;
-  left: 0;
-  z-index: 20;
-  background: #f7f9fc;
-}
-
-#sheet tr:first-child th:first-child {
-  z-index: 40;
-  background: #08679a;
-}
 
 #sheet th:nth-child(2),
 #sheet td:nth-child(2) {
   position: sticky;
   left: 52px;
-  z-index: 19;
+  z-index: 20;
   background: white;
   box-shadow: 2px 0 3px rgba(0, 0, 0, 0.08);
 }
 
 #sheet tr:first-child th:nth-child(2) {
-  z-index: 39;
-  background: #08679a;
+  z-index: 40;
+  background: #08639a;
 }
 
 #sheet td:nth-child(2)[contenteditable="true"] {
@@ -1443,6 +1427,9 @@ const activeSheet = "section1";
 const table =
   document.getElementById("sheet");
 
+const sheetContainer =
+  document.getElementById("sheetContainer");
+
 
 // =====================================================
 // EDIT SESSION
@@ -1471,7 +1458,7 @@ const COLUMN_C_PASSWORD = "AUGUST";
 
 
 // =====================================================
-// ZOOM FUNCTIONALITY
+// FIXED ZOOM FUNCTIONALITY (PRESERVES STICKY POSITIONING)
 // =====================================================
 
 let currentZoom = 100;
@@ -1487,7 +1474,13 @@ const zoomResetBtn = document.getElementById('zoom-reset');
 function applySheetZoom(newZoom) {
   currentZoom = Math.min(Math.max(newZoom, MIN_ZOOM), MAX_ZOOM);
   zoomValueEl.textContent = `${currentZoom}%`;
-  table.style.transform = `scale(${currentZoom / 100})`;
+  
+  // Use CSS zoom property where supported, or fallback scale without break
+  if ('zoom' in sheetContainer.style) {
+    sheetContainer.style.zoom = `${currentZoom}%`;
+  } else {
+    table.style.fontSize = `${(currentZoom / 100) * 15}px`;
+  }
 
   zoomOutBtn.disabled = currentZoom <= MIN_ZOOM;
   zoomInBtn.disabled = currentZoom >= MAX_ZOOM;
