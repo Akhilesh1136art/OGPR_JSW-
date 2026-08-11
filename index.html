@@ -287,7 +287,7 @@ td[contenteditable="true"]:focus {
 
 
 /* =====================================================
-   PROTECTED CELLS (COL A & B)
+   PROTECTED CELLS (COL A, B & C)
    ===================================================== */
 
 .protected-cell {
@@ -1365,9 +1365,9 @@ const db =
 // SETTINGS
 // =====================================================
 
-const rows = 100;
+const rows = 1000;
 
-const cols = 26;
+const cols = 7;
 
 const activeSheet = "section1";
 
@@ -1387,6 +1387,8 @@ let columnAUnlocked = false;
 
 let columnBUnlocked = false;
 
+let columnCUnlocked = false;
+
 let selectedCell = null;
 
 
@@ -1396,6 +1398,7 @@ let selectedCell = null;
 
 const COLUMN_A_PASSWORD = "JSW";
 const COLUMN_B_PASSWORD = "NEO@2012";
+const COLUMN_C_PASSWORD = "AUGUST";
 
 
 // =====================================================
@@ -1560,7 +1563,7 @@ function renderTable() {
       td.contentEditable = false;
 
 
-      if (c === 0 || c === 1) {
+      if (c === 0 || c === 1 || c === 2) {
 
         td.classList.add(
           "protected-cell"
@@ -1684,6 +1687,35 @@ function handleCellClick(e) {
     else {
 
       openNamePopup(1);
+
+    }
+
+    return;
+
+  }
+
+
+  // ===================================================
+  // COLUMN C
+  // ===================================================
+
+  if (col === 2) {
+
+    if (columnCUnlocked) {
+
+      return;
+
+    }
+
+    if (userName) {
+
+      openPasswordPopup(2);
+
+    }
+
+    else {
+
+      openNamePopup(2);
 
     }
 
@@ -1828,7 +1860,7 @@ document
       /*
          Unlock normal cells.
 
-         Column A and Column B remain protected.
+         Columns A, B, and C remain protected.
          Column D uses calendar.
       */
 
@@ -1847,6 +1879,7 @@ document
           if (
             col !== 0 &&
             col !== 1 &&
+            col !== 2 &&
             col !== 3
           ) {
 
@@ -1873,10 +1906,10 @@ document
 
 
       /*
-         Column A or Column B -> password.
+         Columns A, B, or C -> password.
       */
 
-      if (protectedCol === 0 || protectedCol === 1) {
+      if (protectedCol >= 0 && protectedCol <= 2) {
 
         openPasswordPopup(protectedCol);
 
@@ -2019,6 +2052,9 @@ function openPasswordPopup(colIndex = 0) {
   } else if (colIndex === 1) {
     title.innerText = "Column B is Protected";
     desc.innerText = "Enter password to edit Verified by Neo";
+  } else if (colIndex === 2) {
+    title.innerText = "Column C is Protected";
+    desc.innerText = "Enter password to edit Timken Permit";
   }
 
 
@@ -2040,7 +2076,7 @@ function openPasswordPopup(colIndex = 0) {
 
 
 // =====================================================
-// UNLOCK COLUMN A / B
+// UNLOCK COLUMN A / B / C
 // =====================================================
 
 function unlockColumn() {
@@ -2082,8 +2118,10 @@ function unlockColumn() {
   }
 
 
-  const requiredPassword =
-    targetCol === 0 ? COLUMN_A_PASSWORD : COLUMN_B_PASSWORD;
+  let requiredPassword = "";
+  if (targetCol === 0) requiredPassword = COLUMN_A_PASSWORD;
+  else if (targetCol === 1) requiredPassword = COLUMN_B_PASSWORD;
+  else if (targetCol === 2) requiredPassword = COLUMN_C_PASSWORD;
 
 
   if (
@@ -2128,6 +2166,24 @@ function unlockColumn() {
     document
       .querySelectorAll(
         '#sheet td[data-col="1"]'
+      )
+      .forEach(td => {
+
+        td.contentEditable = true;
+
+        td.classList.add(
+          "protected-unlocked"
+        );
+
+      });
+
+  } else if (targetCol === 2) {
+
+    columnCUnlocked = true;
+
+    document
+      .querySelectorAll(
+        '#sheet td[data-col="2"]'
       )
       .forEach(td => {
 
@@ -2810,7 +2866,7 @@ async function saveCell(e) {
 
 
   /*
-     Column A & B require passwords.
+     Columns A, B & C require passwords.
   */
 
   if (
@@ -2831,6 +2887,15 @@ async function saveCell(e) {
 
   }
 
+  if (
+    col === 2 &&
+    !columnCUnlocked
+  ) {
+
+    return;
+
+  }
+
 
   /*
      Other columns require name.
@@ -2839,6 +2904,7 @@ async function saveCell(e) {
   if (
     col !== 0 &&
     col !== 1 &&
+    col !== 2 &&
     (
       !editingEnabled ||
       !userName
@@ -3767,6 +3833,10 @@ function lockEditing() {
 
 
   columnBUnlocked =
+    false;
+
+
+  columnCUnlocked =
     false;
 
 
