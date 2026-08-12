@@ -124,7 +124,7 @@ body {
   height: calc(100vh - 120px);
 
   overflow-x: auto;
-  overflow-y: scroll;
+  overflow-y: auto;
 
   background: white;
 
@@ -186,7 +186,8 @@ body {
 
 table {
 
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 
   width: max-content;
 
@@ -219,35 +220,30 @@ td {
 
 
 /* =====================================================
-   COLUMN HEADERS
+   COLUMN HEADERS & FREEZING LOGIC
    ===================================================== */
 
-#sheet > tr:first-child th {
-
+/* Freeze top header row */
+#sheet tr:first-child th {
   background: #08639a;
-
   color: white;
-
   height: 55px;
-
   position: sticky;
-
   top: 0;
-
   z-index: 10;
-
   font-weight: bold;
 }
 
-#sheet > tr:first-child th:first-child {
-
+/* Row number column corner header (#) */
+#sheet tr:first-child th:first-child {
   min-width: 52px;
-
   width: 52px;
-
   text-align: center;
-
   background: #075681;
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: 50;
 }
 
 .column-letter {
@@ -272,26 +268,43 @@ td {
 
 
 /* =====================================================
-   ROW NUMBERS
+   ROW NUMBERS & FREEZING COLUMN A
    ===================================================== */
 
+/* Freeze row numbers column */
 .row-number {
-
   position: sticky;
-
   left: 0;
-
   z-index: 5;
-
   min-width: 52px;
-
   width: 52px;
-
   text-align: center;
-
   background: #f1f5f9;
-
   color: #334155;
+}
+
+/* Freeze Column A (JSW OGPR's No) cells */
+#sheet td:nth-child(2) {
+  position: sticky;
+  left: 52px;
+  z-index: 6;
+  background: white;
+  box-shadow: 2px 0 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Freeze Column A header */
+#sheet tr:first-child th:nth-child(2) {
+  position: sticky;
+  left: 52px;
+  top: 0;
+  z-index: 40;
+  background: #08639a;
+  box-shadow: 2px 0 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Highlight editable Column A when active */
+#sheet td:nth-child(2)[contenteditable="true"] {
+  background: #ffffcc;
 }
 
 
@@ -986,7 +999,6 @@ body {
   max-width: none;
   width: max-content;
   min-width: 100%;
-  border-collapse: collapse;
 }
 
 @media (max-width: 700px) {
@@ -1001,45 +1013,6 @@ body {
     min-width: 100%;
   }
 
-}
-
-
-/* =====================================================
-   FREEZE COLUMN A
-   ===================================================== */
-
-#sheet th:first-child,
-#sheet td:first-child {
-  position: sticky;
-  left: 0;
-  z-index: 20;
-  background: #f7f9fc;
-}
-
-#sheet tr:first-child th:first-child {
-  z-index: 40;
-  background: #08679a;
-}
-
-/* Freeze Column A after the row-number column. */
-#sheet th:nth-child(2),
-#sheet td:nth-child(2) {
-  position: sticky;
-  left: 52px;
-  z-index: 19;
-  background: white;
-  box-shadow: 2px 0 3px rgba(0, 0, 0, 0.08);
-}
-
-/* Header of frozen Column A stays above normal cells. */
-#sheet tr:first-child th:nth-child(2) {
-  z-index: 39;
-  background: #08679a;
-}
-
-/* Keep editable/frozen Column A readable while editing. */
-#sheet td:nth-child(2)[contenteditable="true"] {
-  background: #ffffcc;
 }
 
 
@@ -1410,7 +1383,7 @@ const db =
 
 const rows = 1000;
 
-const cols = 10;
+const cols = 7;
 
 const activeSheet = "section1";
 
