@@ -112,6 +112,36 @@ body {
   background: #218838;
 }
 
+/* =====================================================
+   SHEET-ONLY ZOOM CONTROLS
+   ===================================================== */
+
+#sheetZoomControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+}
+
+#sheetZoomControls button {
+  background: #495057;
+  min-width: 42px;
+  padding: 9px 12px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+#sheetZoomControls button:hover {
+  background: #343a40;
+}
+
+#sheetZoomLevel {
+  min-width: 58px;
+  text-align: center;
+  font-weight: bold;
+  color: #495057;
+}
+
 
 /* =====================================================
    SHEET CONTAINER & ENLARGED CUSTOM SCROLLBAR
@@ -196,9 +226,7 @@ table {
 
   background: white;
 
-  /* Keep the sheet at 50% without using transform.
-     transform creates a containing block and can break sticky positioning. */
-  zoom: 0.5;
+  /* Zoom is controlled by the sheet-only zoom controls/JS. */
 }
 
 th,
@@ -952,11 +980,11 @@ td.highlight {
 
   box-shadow: 0 0 20px rgba(0,0,0,0.3);
 
-  width: 500px;
+  width: min(500px, calc(100vw - 40px));
 
-  max-width: 90%;
+  max-width: calc(100vw - 40px);
 
-  max-height: 500px;
+  max-height: calc(100vh - 40px);
 
   overflow-y: auto;
 
@@ -1095,6 +1123,83 @@ body {
   font-size: 16px;
 }
 
+
+/* =====================================================
+   MOBILE TOOLBAR LAYOUT
+   Search stays on its own row; ALL buttons/zoom controls
+   move below it so nothing gets squeezed on phones.
+   ===================================================== */
+
+@media (max-width: 700px) {
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  #searchInput {
+    order: 1;
+    width: 100%;
+    flex: 0 0 100%;
+    min-width: 0;
+    height: 48px;
+    font-size: 16px;
+    padding: 10px 12px;
+  }
+
+  #historyBtn,
+  #exportBtn {
+    order: 2;
+    flex: 1 1 0;
+    min-width: 0;
+    height: 46px;
+    padding: 8px 10px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  #sheetZoomControls {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  #sheetZoomControls button {
+    min-width: 44px;
+    height: 42px;
+    padding: 8px 12px;
+  }
+
+  #sheetZoomLevel {
+    min-width: 58px;
+    line-height: 42px;
+  }
+
+  #sheetContainer {
+    height: calc(100vh - 235px);
+  }
+}
+
+/* Very narrow phones: put the two main buttons on separate rows
+   only when there isn't enough room for comfortable touch targets. */
+@media (max-width: 380px) {
+
+  #historyBtn,
+  #exportBtn {
+    flex: 0 0 100%;
+    width: 100%;
+  }
+
+  #sheetContainer {
+    height: calc(100vh - 285px);
+  }
+}
+
 </style>
 
 </head>
@@ -1133,6 +1238,13 @@ body {
   <button id="exportBtn">
     ⬇ Download PDF
   </button>
+
+  <div id="sheetZoomControls" title="Zoom the sheet only">
+    <button id="zoomOutBtn" type="button" aria-label="Zoom out">−</button>
+    <span id="sheetZoomLevel">50%</span>
+    <button id="zoomInBtn" type="button" aria-label="Zoom in">+</button>
+    <button id="zoomResetBtn" type="button" aria-label="Reset sheet zoom">↺</button>
+  </div>
 
 </div>
 
@@ -3306,6 +3418,79 @@ document
 
     }
   );
+
+
+// =====================================================
+// SHEET-ONLY ZOOM
+// =====================================================
+
+(() => {
+  const sheet = document.getElementById("sheet");
+  const sheetContainer = document.getElementById("sheetContainer");
+  const zoomOutBtn = document.getElementById("zoomOutBtn");
+  const zoomInBtn = document.getElementById("zoomInBtn");
+  const zoomResetBtn = document.getElementById("zoomResetBtn");
+  const zoomLevel = document.getElementById("sheetZoomLevel");
+
+  let sheetZoom = 0.50;
+  const MIN_ZOOM = 0.25;
+  const MAX_ZOOM = 1.50;
+  const STEP = 0.10;
+
+  function applySheetZoom(zoom, keepPoint = null) {
+    sheetZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom));
+    sheet.style.zoom = sheetZoom;
+    zoomLevel.textContent = Math.round(sheetZoom * 100) + "%";
+
+    // Keep the same area of the sheet under the pointer when zooming.
+    if (keepPoint) {
+      const rect = sheetContainer.getBoundingClientRect();
+      const oldZoom = keepPoint.oldZoom;
+      const x = sheetContainer.scrollLeft + keepPoint.clientX - rect.left;
+      const y = sheetContainer.scrollTop + keepPoint.clientY - rect.top;
+      const ratio = sheetZoom / oldZoom;
+      sheetContainer.scrollLeft = Math.max(0, x * ratio - (keepPoint.clientX - rect.left));
+      sheetContainer.scrollTop = Math.max(0, y * ratio - (keepPoint.clientY - rect.top));
+    }
+  }
+
+  function changeZoom(delta, point = null) {
+    applySheetZoom(sheetZoom + delta, point ? { ...point, oldZoom: sheetZoom } : null);
+  }
+
+  zoomInBtn.addEventListener("click", () => changeZoom(STEP));
+  zoomOutBtn.addEventListener("click", () => changeZoom(-STEP));
+  zoomResetBtn.addEventListener("click", () => applySheetZoom(0.50));
+
+  // Ctrl + mouse wheel zooms ONLY the sheet, not the browser tab.
+  sheetContainer.addEventListener("wheel", event => {
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    changeZoom(event.deltaY < 0 ? STEP : -STEP, {
+      clientX: event.clientX,
+      clientY: event.clientY
+    });
+  }, { passive: false });
+
+  // Ctrl +/- and Ctrl+0 also control sheet zoom instead of browser zoom.
+  document.addEventListener("keydown", event => {
+    if (!event.ctrlKey && !event.metaKey) return;
+
+    if (event.key === "+" || event.key === "=") {
+      event.preventDefault();
+      changeZoom(STEP);
+    } else if (event.key === "-" || event.key === "_") {
+      event.preventDefault();
+      changeZoom(-STEP);
+    } else if (event.key === "0") {
+      event.preventDefault();
+      applySheetZoom(0.50);
+    }
+  }, { passive: false });
+
+  // Initial sheet zoom. Browser/page zoom is left at 100%.
+  applySheetZoom(0.50);
+})();
 
 
 // =====================================================
