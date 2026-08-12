@@ -119,6 +119,7 @@ body {
 
 #sheetContainer {
 
+  position: relative;
   width: 100%;
 
   height: calc(100vh - 120px);
@@ -195,9 +196,9 @@ table {
 
   background: white;
 
-  /* Default 50% scale applied */
-  transform: scale(0.5);
-  transform-origin: top left;
+  /* Keep the sheet at 50% without using transform.
+     transform creates a containing block and can break sticky positioning. */
+  zoom: 0.5;
 }
 
 th,
@@ -226,11 +227,11 @@ td {
 /* Freeze top header row */
 #sheet tr:first-child th {
   background: #08639a;
-  color: white;
-  height: 55px;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 30;
+  color: white;
+  height: 55px;
   font-weight: bold;
 }
 
@@ -300,6 +301,32 @@ td {
   z-index: 40;
   background: #08639a;
   box-shadow: 2px 0 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Keep the first data column frozen while scrolling horizontally.
+   The row-number column is 52px wide, so Column A starts at 52px. */
+#sheet td:nth-child(2) {
+  position: sticky;
+  left: 52px;
+  z-index: 20;
+  background: white;
+}
+
+/* Keep the header row above all frozen/body cells. */
+#sheet tr:first-child th {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+#sheet tr:first-child th:first-child {
+  left: 0;
+  z-index: 50;
+}
+
+#sheet tr:first-child th:nth-child(2) {
+  left: 52px;
+  z-index: 45;
 }
 
 /* Highlight editable Column A when active */
