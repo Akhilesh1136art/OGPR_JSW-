@@ -1125,81 +1125,92 @@ body {
 
 
 /* =====================================================
-   MOBILE TOOLBAR LAYOUT
-   Search stays on its own row; ALL buttons/zoom controls
-   move below it so nothing gets squeezed on phones.
+   MOBILE TOOLBAR — SINGLE COMPACT ROW
+   Search is full-width; every control stays on the row below.
    ===================================================== */
 
 @media (max-width: 700px) {
-
   .toolbar {
     display: flex;
     flex-wrap: wrap;
-    align-items: stretch;
-    gap: 8px;
-    padding: 10px;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
   }
 
   #searchInput {
     order: 1;
-    width: 100%;
     flex: 0 0 100%;
+    width: 100%;
     min-width: 0;
-    height: 48px;
+    height: 44px;
+    box-sizing: border-box;
     font-size: 16px;
-    padding: 10px 12px;
+    padding: 8px 12px;
   }
 
   #historyBtn,
   #exportBtn {
     order: 2;
-    flex: 1 1 0;
+    flex: 1 1 auto;
     min-width: 0;
-    height: 46px;
-    padding: 8px 10px;
-    font-size: 14px;
+    height: 40px;
+    padding: 5px 7px;
+    font-size: 13px;
     white-space: nowrap;
   }
 
   #sheetZoomControls {
-    order: 3;
-    width: 100%;
-    margin-left: 0;
-    justify-content: center;
-    gap: 6px;
+    order: 2;
+    flex: 0 0 auto;
+    width: auto;
+    height: 40px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
 
   #sheetZoomControls button {
-    min-width: 44px;
-    height: 42px;
-    padding: 8px 12px;
+    min-width: 34px;
+    width: 34px;
+    height: 34px;
+    padding: 2px;
+    font-size: 17px;
   }
 
   #sheetZoomLevel {
-    min-width: 58px;
-    line-height: 42px;
+    min-width: 42px;
+    line-height: 34px;
+    font-size: 14px;
+    text-align: center;
   }
 
   #sheetContainer {
-    height: calc(100vh - 235px);
+    height: calc(100vh - 165px);
   }
 }
 
-/* Very narrow phones: put the two main buttons on separate rows
-   only when there isn't enough room for comfortable touch targets. */
-@media (max-width: 380px) {
-
+@media (max-width: 420px) {
   #historyBtn,
   #exportBtn {
-    flex: 0 0 100%;
-    width: 100%;
+    font-size: 12px;
   }
 
-  #sheetContainer {
-    height: calc(100vh - 285px);
+  #sheetZoomControls {
+    gap: 2px;
+  }
+
+  #sheetZoomControls button {
+    min-width: 31px;
+    width: 31px;
+  }
+
+  #sheetZoomLevel {
+    min-width: 38px;
+    font-size: 13px;
   }
 }
-
 </style>
 
 </head>
