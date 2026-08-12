@@ -46,26 +46,25 @@ body {
 
 
 /* =====================================================
-   TOOLBAR & INLINE CONTROLS BELOW SEARCH BAR
+   TOOLBAR
    ===================================================== */
 
 .toolbar {
   background: white;
 
-  padding: 12px 15px;
+  padding: 10px 15px;
 
   display: flex;
-  flex-direction: column;
+  align-items: center;
 
-  gap: 12px;
+  gap: 10px;
 
   border-bottom: 1px solid #ddd;
 }
 
 #searchInput {
 
-  width: 100%;
-  max-width: 320px;
+  width: 280px;
 
   padding: 9px 12px;
 
@@ -81,13 +80,6 @@ body {
 #searchInput:focus {
 
   border-color: #007bff;
-}
-
-.toolbar-bottom-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
 }
 
 .toolbar button {
@@ -120,101 +112,76 @@ body {
   background: #218838;
 }
 
-#toggleScreenBtn {
-  background: #17a2b8;
-}
-
-#toggleScreenBtn:hover {
-  background: #138496;
-}
-
 
 /* =====================================================
-   ZOOM TOOLBAR
-   ===================================================== */
-
-.zoom-toolbar {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 6px;
-  background-color: #ffffff;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 8px;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.zoom-btn {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f8fafc;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  color: #0f172a;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  outline: none;
-  transition: all 0.1s ease;
-}
-
-.zoom-btn:active {
-  background-color: #e2e8f0;
-  transform: scale(0.95);
-}
-
-.zoom-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.zoom-value {
-  min-width: 45px;
-  text-align: center;
-  font-size: 13px;
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.reset-btn svg {
-  stroke: #0f172a;
-}
-
-#sheet {
-  transform-origin: top left;
-  transition: transform 0.15s ease-out;
-}
-
-
-/* =====================================================
-   SHEET CONTAINER (HIDDEN SCROLLBAR)
+   SHEET CONTAINER & ENLARGED CUSTOM SCROLLBAR
    ===================================================== */
 
 #sheetContainer {
 
   width: 100%;
 
-  height: calc(100vh - 180px);
+  height: calc(100vh - 120px);
 
   overflow-x: auto;
-  overflow-y: auto;
+  overflow-y: scroll;
 
   background: white;
 
-  /* Hide Scrollbars in Firefox */
-  scrollbar-width: none;
+  /* Firefox enlarged scrollbar */
+  scrollbar-width: auto;
+  scrollbar-color: #555555 #e0e0e0;
 }
 
-/* Hide Scrollbars in WebKit Browsers (Chrome, Edge, Safari) */
+/* Custom Scrollbar for Chrome, Edge, Safari (Enlarged for Easy Touch/Scroll) */
 #sheetContainer::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
+  width: 28px;
+  height: 28px;
+}
+
+#sheetContainer::-webkit-scrollbar-track {
+  background: #e0e0e0;
+  border-left: 1px solid #ccc;
+  border-top: 1px solid #ccc;
+}
+
+#sheetContainer::-webkit-scrollbar-thumb {
+  background: #08639a;
+  border-radius: 14px;
+  border: 4px solid #e0e0e0;
+}
+
+#sheetContainer::-webkit-scrollbar-thumb:hover {
+  background: #054269;
+}
+
+#sheetContainer::-webkit-scrollbar-button:single-button {
+  background-color: #d0d0d0;
+  display: block;
+  border-style: solid;
+  height: 28px;
+  width: 28px;
+}
+
+/* Scrollbar Buttons / Arrows */
+#sheetContainer::-webkit-scrollbar-button:single-button:vertical:decrement {
+  border-width: 0 8px 10px 8px;
+  border-color: transparent transparent #222222 transparent;
+}
+
+#sheetContainer::-webkit-scrollbar-button:single-button:vertical:increment {
+  border-width: 10px 8px 0 8px;
+  border-color: #222222 transparent transparent transparent;
+}
+
+#sheetContainer::-webkit-scrollbar-button:single-button:horizontal:decrement {
+  border-width: 8px 10px 8px 0;
+  border-color: transparent #222222 transparent transparent;
+}
+
+#sheetContainer::-webkit-scrollbar-button:single-button:horizontal:increment {
+  border-width: 8px 0 8px 10px;
+  border-color: transparent transparent transparent #222222;
 }
 
 table {
@@ -226,6 +193,10 @@ table {
   min-width: 100%;
 
   background: white;
+
+  /* Default 50% scale applied */
+  transform: scale(0.5);
+  transform-origin: top left;
 }
 
 th,
@@ -1155,33 +1126,13 @@ body {
     placeholder="Search cell or value..."
   >
 
-  <div class="toolbar-bottom-row">
+  <button id="historyBtn">
+    View History
+  </button>
 
-    <button id="historyBtn">
-      View History
-    </button>
-
-    <button id="exportBtn">
-      ⬇ Download PDF
-    </button>
-
-    <button id="toggleScreenBtn">
-      ⤢ Maximize
-    </button>
-
-    <!-- ZOOM TOOLBAR INTEGRATED BELOW SEARCH BAR -->
-    <div class="zoom-toolbar">
-      <button class="zoom-btn" id="zoom-out" aria-label="Zoom Out">−</button>
-      <span class="zoom-value" id="zoom-value">100%</span>
-      <button class="zoom-btn" id="zoom-in" aria-label="Zoom In">+</button>
-      <button class="zoom-btn reset-btn" id="zoom-reset" aria-label="Reset Zoom">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-        </svg>
-      </button>
-    </div>
-
-  </div>
+  <button id="exportBtn">
+    ⬇ Download PDF
+  </button>
 
 </div>
 
@@ -1491,34 +1442,6 @@ let selectedCell = null;
 const COLUMN_A_PASSWORD = "JSW";
 const COLUMN_B_PASSWORD = "NEO@2012";
 const COLUMN_C_PASSWORD = "AUGUST";
-
-
-// =====================================================
-// ZOOM FUNCTIONALITY
-// =====================================================
-
-let currentZoom = 100;
-const ZOOM_STEP = 10;
-const MIN_ZOOM = 50;
-const MAX_ZOOM = 200;
-
-const zoomValueEl = document.getElementById('zoom-value');
-const zoomInBtn = document.getElementById('zoom-in');
-const zoomOutBtn = document.getElementById('zoom-out');
-const zoomResetBtn = document.getElementById('zoom-reset');
-
-function applySheetZoom(newZoom) {
-  currentZoom = Math.min(Math.max(newZoom, MIN_ZOOM), MAX_ZOOM);
-  zoomValueEl.textContent = `${currentZoom}%`;
-  table.style.transform = `scale(${currentZoom / 100})`;
-
-  zoomOutBtn.disabled = currentZoom <= MIN_ZOOM;
-  zoomInBtn.disabled = currentZoom >= MAX_ZOOM;
-}
-
-zoomInBtn.addEventListener('click', () => applySheetZoom(currentZoom + ZOOM_STEP));
-zoomOutBtn.addEventListener('click', () => applySheetZoom(currentZoom - ZOOM_STEP));
-zoomResetBtn.addEventListener('click', () => applySheetZoom(100));
 
 
 // =====================================================
@@ -3829,33 +3752,6 @@ document
 
     }
   );
-
-
-// =====================================================
-// MINIMIZE / MAXIMIZE TOGGLE
-// =====================================================
-
-const toggleScreenBtn = document.getElementById("toggleScreenBtn");
-
-toggleScreenBtn.addEventListener("click", () => {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(err => {
-      alert(`Error enabling fullscreen: ${err.message}`);
-    });
-  } else {
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    }
-  }
-});
-
-document.addEventListener("fullscreenchange", () => {
-  if (document.fullscreenElement) {
-    toggleScreenBtn.innerText = "⤦ Minimize";
-  } else {
-    toggleScreenBtn.innerText = "⤢ Maximize";
-  }
-});
 
 
 // =====================================================
